@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   HelpCircle,
   ChevronDown,
@@ -11,9 +11,6 @@ import {
   Shield,
   Calendar,
   CreditCard,
-  Send,
-  X,
-  Loader2,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import Card from "../components/common/Card";
@@ -70,73 +67,22 @@ const FAQ_DATA = [
   },
 ];
 
-const QUICK_QUESTIONS = [
-  "What documents do I need for NADRA CNIC update?",
-  "How do I reset my visit appointment?",
-  "Where is Gate 2 at the Executive Center?",
-];
-
-const AI_RESPONSES = {
-  "What documents do I need for NADRA CNIC update?":
-    "For a NADRA CNIC update, you need: (1) Original CNIC, (2) 2 passport-size photos, (3) Proof of address (utility bill less than 3 months old), (4) Birth Certificate or B-Form. Bring both originals and photocopies. Fee: PKR 1,500 for normal, PKR 2,500 for executive.",
-  "How do I reset my visit appointment?":
-    "To reset your visit appointment: Go to the Visits tab → find your upcoming visit → click 'Cancel Visit' → confirm. Then start a new application from the Quick Access Hub to schedule a fresh appointment. Your tracking token will be regenerated.",
-  "Where is Gate 2 at the Executive Center?":
-    "Gate 2 at the NADRA Mega Center (Executive) in Blue Area, Islamabad is the main entrance for CNIC services. Enter through Gate 2, proceed to the Token Counter, then follow signs to Biometric Desk 4. Arrive 15 minutes before your scheduled time.",
-};
-
-const Help = () => {
+/**
+ * Help – Help & Support page.
+ *
+ * Props:
+ *   onOpenChat – callback to open the global chat widget
+ */
+const Help = ({ onOpenChat = () => {} }) => {
   const { theme } = useTheme();
   const [openId, setOpenId] = useState(null);
   const [search, setSearch] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      role: "ai",
-      text: "Hello! I'm your QueueLess Assistant. Ask me anything about NADRA document rules, passport applications, or your upcoming office visit.",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatTyping, setChatTyping] = useState(false);
-  const chatEndRef = useRef(null);
-
-  /* No body lock needed — widget is docked, not fullscreen */
 
   const filtered = FAQ_DATA.filter(
     (faq) =>
       faq.question.toLowerCase().includes(search.toLowerCase()) ||
       faq.answer.toLowerCase().includes(search.toLowerCase()),
   );
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, chatTyping]);
-
-  const simulateResponse = (msg) => {
-    setChatTyping(true);
-    const response =
-      AI_RESPONSES[msg] ||
-      `That's a great question about "${msg}". For the most accurate guidance, I recommend checking the specific service requirements in the Quick Access Hub or visiting the nearest office. Our AI agents will prepare a personalized checklist for you.`;
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        { id: Date.now(), role: "ai", text: response },
-      ]);
-      setChatTyping(false);
-    }, 1000 + Math.random() * 800);
-  };
-
-  const handleChatSend = (text) => {
-    const msg = text || chatInput.trim();
-    if (!msg) return;
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", text: msg },
-    ]);
-    setChatInput("");
-    simulateResponse(msg);
-  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -169,7 +115,7 @@ const Help = () => {
         <Button
           variant="teal"
           icon={<MessageCircle size={14} />}
-          onClick={() => setIsChatOpen(true)}
+          onClick={onOpenChat}
           className="hover:opacity-90 active:scale-95"
         >
           Start Chat
@@ -178,7 +124,6 @@ const Help = () => {
 
       {/* Quick Contact */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Email Support */}
         <a href="mailto:support@queueless.ai" className="no-underline">
           <Card
             className="flex flex-col items-center gap-2 py-4 text-center cursor-pointer transition-shadow hover:shadow-md"
@@ -199,7 +144,6 @@ const Help = () => {
           </Card>
         </a>
 
-        {/* Call Helpline */}
         <a href="tel:+9251111786100" className="no-underline">
           <Card
             className="flex flex-col items-center gap-2 py-4 text-center cursor-pointer transition-shadow hover:shadow-md"
@@ -339,154 +283,6 @@ const Help = () => {
           +92-51-111-786-100
         </a>
       </p>
-
-      {/* ═══════════════════════════════════════════════════════
-          AI CHAT WIDGET — Facebook-style docked bottom-right
-          ═══════════════════════════════════════════════════════ */}
-
-      {/* Floating toggle button */}
-      <button
-        onClick={() => setIsChatOpen((p) => !p)}
-        className="fixed bottom-20 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
-        style={{ background: theme.accent }}
-      >
-        {isChatOpen ? (
-          <X size={24} className="text-white" />
-        ) : (
-          <MessageCircle size={24} className="text-white" />
-        )}
-      </button>
-
-      {/* Docked chat widget */}
-      <div
-        className="fixed bottom-20 right-6 z-50 w-80 sm:w-96 rounded-2xl shadow-2xl border flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
-        style={{
-          background: theme.surface,
-          borderColor: theme.border,
-          height: isChatOpen ? "480px" : "0px",
-          opacity: isChatOpen ? 1 : 0,
-          transform: isChatOpen ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
-          pointerEvents: isChatOpen ? "auto" : "none",
-        }}
-      >
-        {/* Compact header */}
-        <div
-          className="flex items-center justify-between px-3 py-2.5 shrink-0"
-          style={{ background: theme.accent }}
-        >
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Bot size={18} className="text-white" />
-              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-400 border border-white" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-white leading-tight">
-                QueueLess AI Assistant
-              </p>
-              <p className="text-[9px] text-white/70">
-                Online • Instant replies
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsChatOpen(false)}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Scrollable messages */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {chatMessages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className="max-w-[85%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed"
-                style={{
-                  background:
-                    msg.role === "user" ? theme.accent : theme.surfaceAlt,
-                  color: msg.role === "user" ? "#ffffff" : theme.text,
-                  borderBottomRightRadius:
-                    msg.role === "user" ? "4px" : "16px",
-                  borderBottomLeftRadius:
-                    msg.role === "ai" ? "4px" : "16px",
-                }}
-              >
-                {msg.text}
-              </div>
-            </div>
-          ))}
-
-          {chatTyping && (
-            <div className="flex justify-start">
-              <div
-                className="flex items-center gap-1.5 rounded-2xl rounded-bl-md px-3 py-2"
-                style={{ background: theme.surfaceAlt }}
-              >
-                <Loader2
-                  size={12}
-                  className="animate-spin"
-                  style={{ color: theme.accent }}
-                />
-                <span
-                  className="text-[11px] font-medium"
-                  style={{ color: theme.textMuted }}
-                >
-                  AI thinking...
-                </span>
-              </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        {/* Suggestion chips — horizontal scroll */}
-        {chatMessages.length <= 2 && (
-          <div className="flex gap-1.5 overflow-x-auto px-3 pb-2 shrink-0" style={{ scrollbarWidth: "none" }}>
-            {QUICK_QUESTIONS.map((q) => (
-              <button
-                key={q}
-                onClick={() => handleChatSend(q)}
-                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
-                style={{
-                  background: theme.accent + "12",
-                  color: theme.accent,
-                  border: `1px solid ${theme.accent}30`,
-                }}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Pinned input bar */}
-        <div
-          className="flex items-center gap-2 p-2 border-t shrink-0"
-          style={{ borderColor: theme.border }}
-        >
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
-            placeholder="Ask anything..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
-            style={{ color: theme.text }}
-          />
-          <button
-            onClick={() => handleChatSend()}
-            disabled={!chatInput.trim() || chatTyping}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all cursor-pointer disabled:opacity-30"
-            style={{ background: theme.accent }}
-          >
-            <Send size={13} className="text-white" />
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
