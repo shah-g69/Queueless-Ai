@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   CreditCard,
   FileText,
@@ -8,6 +8,9 @@ import {
   ChevronRight,
   Sparkles,
   Loader2,
+  Mic,
+  MicOff,
+  Languages,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Modal from "../common/Modal";
@@ -21,17 +24,72 @@ const SERVICES = [
   { id: "education", label: "Education Certificates", desc: "Attestation & Verification", icon: GraduationCap },
 ];
 
-const DEMO_PRESETS = [
+const ENGLISH_PRESETS = [
   { label: "Lost CNIC (Going Alone)", text: "Lost CNIC, no birth certificate, going alone", serviceId: "cnic" },
   { label: "CNIC Renewal After Expiry", text: "Renewal of CNIC after expiry, details unchanged", serviceId: "cnic" },
   { label: "Urgent Passport Renewal", text: "Passport expiring next month, need urgent renewal", serviceId: "passport" },
   { label: "Driving License 42-day", text: "42 days passed since learner permit, need permanent test", serviceId: "license" },
 ];
 
+const URDU_PRESETS = [
+  { label: "Mera CNIC Gum Hogaya (Akela)", text: "Mera CNIC gum ho gaya hai, purani copy hai lekin mai akela ja raha hoon koi relative sath nahi hai", serviceId: "cnic" },
+  { label: "Smart Card Expiry Renewal", text: "Mera Smart Card expire ho chuka hai, details sab same hain renew karwana hai", serviceId: "cnic" },
+  { label: "Urgent Passport Banwana Hai", text: "Mujhe urgent 5-year passport banwana hai, online fee jama karwayi hai", serviceId: "passport" },
+  { label: "Driving License Permanent Test", text: "Learner permit ko 42 din guzar chuke hain, permanent driving test dena hai", serviceId: "license" },
+];
+
 const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isAnalyzing = false }) => {
   const { theme } = useTheme();
   const [selected, setSelected] = useState("cnic");
   const [situation, setSituation] = useState("Lost CNIC, no birth certificate, going alone");
+  const [presetLang, setPresetLang] = useState("urdu"); // default to Urdu for high impact!
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(true);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setSpeechSupported(false);
+      }
+    }
+  }, []);
+
+  const handleToggleVoice = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice recognition is supported in Google Chrome & Edge. Please open in Chrome/Edge or type your text.");
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = presetLang === "urdu" ? "ur-PK" : "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      recognition.onresult = (event) => {
+        const transcript = event?.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          setSituation((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.warn("Speech recognition error:", err);
+      setIsListening(false);
+    }
+  };
 
   const handleStart = () => {
     if (!selected) return;
@@ -84,13 +142,40 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
           </div>
         </div>
 
-        {/* Quick Demo Chips */}
+        {/* Quick Demo Chips with Language Toggle */}
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-            Quick Demo Scenarios (One-Click Test):
-          </p>
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
+              Quick Demo Scenarios:
+            </p>
+            <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: theme.surfaceAlt, border: `1px solid ${theme.border}` }}>
+              <button
+                type="button"
+                onClick={() => setPresetLang("urdu")}
+                className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
+                style={{
+                  background: presetLang === "urdu" ? theme.accent : "transparent",
+                  color: presetLang === "urdu" ? "#ffffff" : theme.textMuted,
+                }}
+              >
+                🇵🇰 Roman Urdu
+              </button>
+              <button
+                type="button"
+                onClick={() => setPresetLang("english")}
+                className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
+                style={{
+                  background: presetLang === "english" ? theme.accent : "transparent",
+                  color: presetLang === "english" ? "#ffffff" : theme.textMuted,
+                }}
+              >
+                🇬🇧 English
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-wrap gap-1.5">
-            {DEMO_PRESETS.map((preset, idx) => (
+            {(presetLang === "urdu" ? URDU_PRESETS : ENGLISH_PRESETS).map((preset, idx) => (
               <button
                 key={idx}
                 type="button"
@@ -108,16 +193,46 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
           </div>
         </div>
 
-        {/* Situation Input */}
+        {/* Situation Input with Voice Mic */}
         <div>
-          <label className="mb-1 block text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-            2. Describe Citizen Situation & Current Documents:
-          </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
+              2. Describe Citizen Situation & Documents:
+            </label>
+            {speechSupported && (
+              <button
+                type="button"
+                onClick={handleToggleVoice}
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer shadow-xs"
+                style={{
+                  background: isListening ? "rgba(239, 68, 68, 0.15)" : theme.surfaceAlt,
+                  color: isListening ? "#ef4444" : theme.accent,
+                  border: `1px solid ${isListening ? "#ef4444" : theme.accent + "40"}`,
+                }}
+                title="Speak in Urdu or English to dictate"
+              >
+                {isListening ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                    </span>
+                    <span className="font-bold">Listening... (Bolein)</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic size={13} />
+                    <span>Voice Dictate (🎙️ بولیں)</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
           <textarea
             value={situation}
             onChange={(e) => setSituation(e.target.value)}
             rows={3}
-            placeholder="e.g. Lost CNIC, have photocopy, father is abroad, need urgent card..."
+            placeholder="e.g. Mera CNIC gum ho gaya hai, purani copy hai lekin mai akela ja raha hoon..."
             className="w-full rounded-xl p-3 text-xs leading-relaxed outline-none transition-all"
             style={{
               background: theme.surfaceAlt,

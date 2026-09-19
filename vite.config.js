@@ -1,4 +1,4 @@
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+﻿import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vite'
@@ -10,4 +10,15 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
+  server: {
+    host: true,
+    proxy: {
+      '/api/fastn': {
+        target: 'https://webhooks.fastn.dev',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/fastn/, ''),
+      },
+    },
+  },
 })
