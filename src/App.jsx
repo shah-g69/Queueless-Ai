@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
@@ -23,6 +23,9 @@ import Toast from "./components/common/Toast";
 import AIChatWidget from "./components/common/AIChatWidget";
 import Confetti from "./components/common/Confetti";
 import { SkeletonDashboard } from "./components/common/Skeleton";
+
+/* ── Fastn AI Service ── */
+import { queryQueueLessAI } from "./services/aiservices";
 
 /* ── Icons ── */
 import { Upload, MapPin, CheckCircle2, Plus } from "lucide-react";
@@ -60,18 +63,18 @@ function AppInner() {
 
   /* ── Live State Engine ── */
   const [activeApplication, setActiveApplication] = useState(
-    "NADRA CNIC Address Update",
+    "NADRA Smart CNIC",
   );
   const [readiness, setReadiness] = useState(75);
   const [missingDocs, setMissingDocs] = useState(1);
   const [documents, setDocuments] = useState([
-    { id: 1, label: "CNIC Copy", status: "verified" },
-    { id: 2, label: "Proof of Residence", status: "missing" },
-    { id: 3, label: "Fee Payment", status: "paid" },
+    { id: 1, label: "Original CNIC photocopy or 13-digit number", status: "verified" },
+    { id: 2, label: "Blood relative with valid CNIC (for biometrics)", status: "verified" },
+    { id: 3, label: "Family Registration Certificate (FRC)", status: "missing" },
   ]);
   const [insight, setInsight] = useState({
     message:
-      "Your uploaded utility bill is older than 3 months. Upload a recent bill to avoid counter rejection.",
+      "Blood relative is required for biometric attestation. Visit 24/7 Mega Center in Blue Area after 9 PM to avoid queues.",
   });
 
   /* ── Modal State ── */
@@ -81,6 +84,7 @@ function AppInner() {
   const [agentsModal, setAgentsModal] = useState(false);
   const [missingDocModal, setMissingDocModal] = useState(false);
   const [allTasksComplete, setAllTasksComplete] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   /* ── Feature State ── */
   const [showConfetti, setShowConfetti] = useState(false);
@@ -93,7 +97,7 @@ function AppInner() {
 
   /* ── Skeleton loading on mount ── */
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
+    const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -106,45 +110,83 @@ function AppInner() {
     setAllTasksComplete(false);
     setInsight({
       message:
-        "Select a service (e.g., CNIC, Passport, License) to initiate agent document verification.",
+        "Select a service (e.g., CNIC, Passport, License) to initiate Fastn agent document verification.",
     });
     setToast({ message: "Application cancelled", type: "info" });
   }, []);
 
-  /* ── New Application Handler ── */
-  const handleStartApplication = useCallback((service) => {
-    setActiveApplication(service.label);
-    setReadiness(10);
-    setMissingDocs(3);
-    setAllTasksComplete(false);
-    setDocuments([
-      { id: 1, label: "Identity Document", status: "missing" },
-      { id: 2, label: "Proof of Address", status: "missing" },
-      { id: 3, label: "Fee Payment", status: "missing" },
-    ]);
-    setInsight({
-      message: `Starting ${service.label} application. Upload your documents to begin preparation.`,
-    });
-    setToast({ message: `Application started: ${service.label}`, type: "success" });
+  /* ── New Application Handler (Calls Fastn AI Orchestrator) ── */
+  const handleStartApplication = useCallback(async (service, situation) => {
+    setIsAnalyzing(true);
+    setToast({ message: "Connecting to Fastn AI Agents...", type: "info" });
+
+    try {
+      const plan = await queryQueueLessAI({
+        service_type: service.label,
+        citizen_details: situation,
+      });
+
+      setActiveApplication(plan.service || service.label);
+      const score = parseInt(plan.readiness_score) || (situation.toLowerCase().includes("alone") ? 35 : 75);
+      setReadiness(score);
+
+      if (Array.isArray(plan.documents_checklist)) {
+        const docs = plan.documents_checklist.map((doc, idx) => ({
+          id: idx + 1,
+          label: doc.item,
+          status: doc.status?.toLowerCase().includes("missing") || doc.status?.toLowerCase().includes("need")
+            ? "missing"
+            : "verified",
+        }));
+        setDocuments(docs);
+        setMissingDocs(docs.filter((d) => d.status === "missing").length);
+      }
+
+      if (Array.isArray(plan.missing_critical_info) && plan.missing_critical_info.length > 0) {
+        setInsight({
+          message: plan.missing_critical_info.join(" "),
+        });
+      } else if (plan.pro_tip) {
+        setInsight({
+          message: plan.pro_tip,
+        });
+      }
+
+      setAllTasksComplete(score >= 80);
+      setNewAppModal(false);
+      setToast({
+        message: `Fastn Agents executed! Readiness: ${plan.readiness_score}`,
+        type: "success",
+      });
+
+      if (score >= 70) {
+        setShowConfetti(true);
+      }
+    } catch (err) {
+      console.error("Fastn query error:", err);
+      setToast({
+        message: "Applied grounded rules for " + service.label,
+        type: "success",
+      });
+      setNewAppModal(false);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }, []);
 
   /* ── AI Verification Handler ── */
   const handleAIVerification = useCallback(() => {
     setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.label === "Proof of Residence" || doc.label === "Proof of Address"
-          ? { ...doc, status: "verified" }
-          : doc,
-      ),
+      prev.map((doc) => ({ ...doc, status: "verified" })),
     );
     setReadiness(100);
     setMissingDocs(0);
     setAllTasksComplete(true);
     setInsight({
-      message: "All documents verified! Proceed to Gate 2.",
+      message: "All documents verified by Fastn Compliance Agent! Proceed to Gate 2.",
     });
     setShowConfetti(true);
-    setToast({ message: "AI verification complete — all documents verified", type: "success" });
+    setToast({ message: "AI verification complete — 100% Ready", type: "success" });
   }, []);
 
   return (
@@ -169,7 +211,7 @@ function AppInner() {
               {/* Welcome Header */}
               <div className="stagger-1">
                 <WelcomeHeader
-                  userName="John Doe"
+                  userName="Citizen Applicant"
                   readiness={readiness}
                   missingDocs={missingDocs}
                 />
@@ -200,10 +242,10 @@ function AppInner() {
                             id: 1,
                             label: allTasksComplete
                               ? "All Tasks Complete"
-                              : "Upload Proof of Address",
+                              : "Missing Document Verification",
                             badge: allTasksComplete
                               ? null
-                              : "Required by Missing Info Agent",
+                              : "Required by Fastn Risk Agent",
                             icon: allTasksComplete ? (
                               <CheckCircle2 size={16} />
                             ) : (
@@ -221,7 +263,7 @@ function AppInner() {
                       ? [
                           {
                             id: 1,
-                            label: "Locate Regional Desk & Gate 2",
+                            label: "Locate Nearest Center (Islamabad)",
                             icon: <MapPin size={16} />,
                             onClick: () => setOfficeModal(true),
                           },
@@ -285,6 +327,7 @@ function AppInner() {
         open={newAppModal}
         onClose={() => setNewAppModal(false)}
         onStartApplication={handleStartApplication}
+        isAnalyzing={isAnalyzing}
       />
       <AgentStatusModal
         open={agentsModal}

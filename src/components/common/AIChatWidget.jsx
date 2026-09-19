@@ -1,24 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { Bot, Send, X, MessageCircle, Sparkles } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { queryQueueLessAI } from "../../services/aiservices";
 
 const QUICK_QUESTIONS = [
-  "What documents do I need for CNIC?",
-  "How long does passport processing take?",
-  "Where is the nearest NADRA office?",
-  "What are the office hours?",
+  "Lost CNIC, no relative with me?",
+  "Urgent passport processing fee?",
+  "Driving license 42-day rule?",
+  "What is the best time for Blue Area NADRA?",
 ];
-
-const AI_RESPONSES = {
-  "What documents do I need for CNIC?":
-    "For a CNIC update/renewal, you need: (1) Original CNIC, (2) Passport-size photos (2 copies), (3) Proof of address (utility bill < 3 months old), (4) Birth certificate or B-Form. All originals + photocopies required.",
-  "How long does passport processing take?":
-    "Standard passport processing takes 7-10 working days. Executive processing is available for 3-5 days at select offices. You'll receive an SMS when your passport is ready for collection.",
-  "Where is the nearest NADRA office?":
-    "Based on your location, the nearest NADRA Mega Center is at Blue Area, Islamabad. Use the 'Find Office' feature in the Quick Access Hub for directions and token times.",
-  "What are the office hours?":
-    "Most government offices operate Mon-Fri, 8:00 AM - 4:00 PM. NADRA Mega Centers have extended hours until 5:00 PM. It's best to arrive before 10:00 AM to avoid long queues.",
-};
 
 const AIChatWidget = () => {
   const { theme } = useTheme();
@@ -27,7 +17,7 @@ const AIChatWidget = () => {
     {
       id: 1,
       role: "ai",
-      text: "Hello! I'm your QueueLess AI assistant. How can I help you with your government service visit today?",
+      text: "Hello! I am your QueueLess AI citizen assistant powered by Fastn. Ask me about NADRA CNIC, Passport, or Driving License procedures!",
     },
   ]);
   const [input, setInput] = useState("");
@@ -42,19 +32,56 @@ const AIChatWidget = () => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const simulateAIResponse = (userMessage) => {
+  const handleAIQuery = async (userMessage) => {
     setIsTyping(true);
-    const response =
-      AI_RESPONSES[userMessage] ||
-      `I understand you're asking about "${userMessage}". Let me help you with that. For the most accurate information, I recommend checking the specific service requirements in the Quick Access Hub or visiting the office directly.`;
 
-    setTimeout(() => {
+    try {
+      const data = await queryQueueLessAI({
+        service_type: userMessage.toLowerCase().includes("passport")
+          ? "Passport Application"
+          : userMessage.toLowerCase().includes("license") || userMessage.toLowerCase().includes("driving")
+          ? "Driving License"
+          : "NADRA Smart CNIC",
+        citizen_details: userMessage,
+      });
+
+      let reply = `📌 **Service**: ${data.service}\n📊 **Readiness Score**: ${data.readiness_score}\n\n`;
+
+      if (data.missing_critical_info && data.missing_critical_info.length > 0) {
+        reply += `⚠️ **Critical Warnings**:\n• ${data.missing_critical_info.join("\n• ")}\n\n`;
+      }
+
+      if (data.documents_checklist && data.documents_checklist.length > 0) {
+        reply += `📋 **Document Requirements**:\n• ${data.documents_checklist
+          .slice(0, 3)
+          .map((d) => `${d.item} (${d.status})`)
+          .join("\n• ")}\n\n`;
+      }
+
+      if (data.estimated_fee) {
+        reply += `💰 **Fee**: ${data.estimated_fee}\n\n`;
+      }
+
+      if (data.pro_tip) {
+        reply += `💡 **Pro-Tip**: ${data.pro_tip}`;
+      }
+
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), role: "ai", text: response },
+        { id: Date.now(), role: "ai", text: reply },
       ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "ai",
+          text: "For Pakistani public office visits, ensure you bring original CNIC, copies, and a blood relative if it is a lost card or first-time application.",
+        },
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1200 + Math.random() * 800);
+    }
   };
 
   const handleSend = (text) => {
@@ -65,7 +92,7 @@ const AIChatWidget = () => {
       { id: Date.now(), role: "user", text: msg },
     ]);
     setInput("");
-    simulateAIResponse(msg);
+    handleAIQuery(msg);
   };
 
   return (
@@ -90,11 +117,11 @@ const AIChatWidget = () => {
       {/* Chat panel */}
       {isOpen && (
         <div
-          className="fixed bottom-24 right-5 z-[90] flex w-[360px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+          className="fixed bottom-24 right-5 z-[90] flex w-[380px] flex-col overflow-hidden rounded-2xl shadow-2xl"
           style={{
             background: theme.surface,
             border: `1px solid ${theme.border}`,
-            height: "min(520px, 70vh)",
+            height: "min(560px, 75vh)",
           }}
         >
           {/* Header */}
@@ -105,8 +132,8 @@ const AIChatWidget = () => {
             <div className="flex items-center gap-2">
               <Bot size={20} className="text-white" />
               <div>
-                <p className="text-sm font-bold text-white">QueueLess AI</p>
-                <p className="text-[10px] text-white/70">Always online</p>
+                <p className="text-sm font-bold text-white">QueueLess AI Concierge</p>
+                <p className="text-[10px] text-white/80">Fastn Multi-Agent Engine</p>
               </div>
             </div>
             <button
@@ -125,7 +152,7 @@ const AIChatWidget = () => {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className="max-w-[80%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed"
+                  className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed whitespace-pre-line"
                   style={{
                     background:
                       msg.role === "user" ? theme.accent : theme.surfaceAlt,
@@ -135,6 +162,7 @@ const AIChatWidget = () => {
                       msg.role === "user" ? "6px" : "16px",
                     borderBottomLeftRadius:
                       msg.role === "ai" ? "6px" : "16px",
+                    border: msg.role === "ai" ? `1px solid ${theme.border}` : "none",
                   }}
                 >
                   {msg.text}
@@ -161,6 +189,9 @@ const AIChatWidget = () => {
                       />
                     ))}
                   </div>
+                  <span className="text-[11px] ml-2" style={{ color: theme.textMuted }}>
+                    Fastn Agent reasoning...
+                  </span>
                 </div>
               </div>
             )}
@@ -176,7 +207,7 @@ const AIChatWidget = () => {
                   onClick={() => handleSend(q)}
                   className="rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
                   style={{
-                    background: theme.accent + "12",
+                    background: theme.accent + "15",
                     color: theme.accent,
                     border: `1px solid ${theme.accent}30`,
                   }}
@@ -198,8 +229,8 @@ const AIChatWidget = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
-              placeholder="Ask me anything..."
-              className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
+              placeholder="Ask about NADRA, Passport, License..."
+              className="flex-1 bg-transparent text-xs outline-none placeholder:opacity-40"
               style={{ color: theme.text }}
             />
             <button
