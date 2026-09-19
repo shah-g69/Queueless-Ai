@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
@@ -30,27 +30,10 @@ import { queryQueueLessAI } from "./services/aiservices";
 /* ── Icons ── */
 import { Upload, MapPin, CheckCircle2, Plus } from "lucide-react";
 
-/** Wrapper that triggers a fade-in animation on mount. */
-function PageTransition({ children, tabKey }) {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    setVisible(false);
-    const raf = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setVisible(true));
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [tabKey]);
-
+/** Wrapper that renders the page content cleanly. */
+function PageTransition({ children }) {
   return (
-    <div
-      className="page-transition"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(12px)",
-        transition: "opacity 0.3s ease, transform 0.3s ease",
-      }}
-    >
+    <div className="page-transition transition-opacity duration-300">
       {children}
     </div>
   );
@@ -88,7 +71,7 @@ function AppInner() {
 
   /* ── Feature State ── */
   const [showConfetti, setShowConfetti] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   /* ── Toast State ── */
   const [toast, setToast] = useState({ message: "", type: "success" });
