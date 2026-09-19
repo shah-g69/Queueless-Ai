@@ -45,19 +45,13 @@ function AppInner() {
   const { theme } = useTheme();
 
   /* ── Live State Engine ── */
-  const [activeApplication, setActiveApplication] = useState(
-    "NADRA Smart CNIC",
-  );
-  const [readiness, setReadiness] = useState(75);
-  const [missingDocs, setMissingDocs] = useState(1);
-  const [documents, setDocuments] = useState([
-    { id: 1, label: "Original CNIC photocopy or 13-digit number", status: "verified" },
-    { id: 2, label: "Blood relative with valid CNIC (for biometrics)", status: "verified" },
-    { id: 3, label: "Family Registration Certificate (FRC)", status: "missing" },
-  ]);
+  const [activeApplication, setActiveApplication] = useState(null);
+  const [readiness, setReadiness] = useState(0);
+  const [missingDocs, setMissingDocs] = useState(0);
+  const [documents, setDocuments] = useState([]);
   const [insight, setInsight] = useState({
     message:
-      "Blood relative is required for biometric attestation. Visit 24/7 Mega Center in Blue Area after 9 PM to avoid queues.",
+      "Select a public service below to launch the Fastn Agent Swarm and analyze your visit readiness.",
   });
 
   /* ── Modal State ── */
