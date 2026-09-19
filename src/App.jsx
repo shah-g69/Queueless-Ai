@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
@@ -6,6 +6,7 @@ import NextActionItems from "./components/Home/actionitems";
 import CurrentTasks from "./components/Home/CurrenTask";
 import QuickAccessHub from "./components/Home/QuickAccessHub";
 import VisitTracker from "./components/Home/VisitTracker";
+import AIResultsDashboard from "./components/Home/AIResultsDashboard";
 import Bottomnav from "./components/Layout/Bottomnav";
 import Documents from "./pages/Document";
 import Visits from "./pages/Visit";
@@ -53,6 +54,7 @@ function AppInner() {
     message:
       "Select a public service below to launch the Fastn Agent Swarm and analyze your visit readiness.",
   });
+  const [aiPlan, setAiPlan] = useState(null);
 
   /* ── Modal State ── */
   const [officeModal, setOfficeModal] = useState(false);
@@ -84,6 +86,7 @@ function AppInner() {
     setReadiness(0);
     setMissingDocs(0);
     setDocuments([]);
+    setAiPlan(null);
     setAllTasksComplete(false);
     setInsight({
       message:
@@ -104,6 +107,8 @@ function AppInner() {
       });
 
       setActiveApplication(plan.service || service.label);
+      setAiPlan(plan);
+
       const score = parseInt(plan.readiness_score) || (situation.toLowerCase().includes("alone") ? 35 : 75);
       setReadiness(score);
 
@@ -265,6 +270,14 @@ function AppInner() {
                   onFindOffice={() => setOfficeModal(true)}
                 />
               </div>
+
+              {/* ── Detailed AI Results Blueprint (Visible when application active) ── */}
+              {hasApplication && aiPlan && (
+                <AIResultsDashboard
+                  plan={aiPlan}
+                  onFindOffice={() => setOfficeModal(true)}
+                />
+              )}
 
               {/* Upcoming Visit Tracker */}
               <div className="stagger-3 mt-6">
