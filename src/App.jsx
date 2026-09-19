@@ -1,0 +1,319 @@
+import { useState, useEffect, useCallback } from "react";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+import WelcomeHeader from "./components/Home/WelcomeHeader";
+import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
+import NextActionItems from "./components/Home/actionitems";
+import CurrentTasks from "./components/Home/CurrenTask";
+import QuickAccessHub from "./components/Home/QuickAccessHub";
+import VisitTracker from "./components/Home/VisitTracker";
+import Bottomnav from "./components/Layout/Bottomnav";
+import Documents from "./pages/Document";
+import Visits from "./pages/Visit";
+import Help from "./pages/help";
+
+/* ── Modals ── */
+import OfficeFinder from "./components/views/OfficeFinder";
+import VisitRoadmap from "./components/views/VisitRoadmap";
+import NewApplicationModal from "./components/views/NewApplicationModal";
+import AgentStatusModal from "./components/views/AgentStatusModal";
+import MissingDocAgentModal from "./components/views/MissingDocAgentModal";
+
+/* ── Features ── */
+import Toast from "./components/common/Toast";
+import AIChatWidget from "./components/common/AIChatWidget";
+import Confetti from "./components/common/Confetti";
+import { SkeletonDashboard } from "./components/common/Skeleton";
+
+/* ── Icons ── */
+import { Upload, MapPin, CheckCircle2, Plus } from "lucide-react";
+
+/** Wrapper that triggers a fade-in animation on mount. */
+function PageTransition({ children, tabKey }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    setVisible(false);
+    const raf = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setVisible(true));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [tabKey]);
+
+  return (
+    <div
+      className="page-transition"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 0.3s ease, transform 0.3s ease",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/** Inner app with live state engine. */
+function AppInner() {
+  const [activeTab, setActiveTab] = useState("home");
+  const { theme } = useTheme();
+
+  /* ── Live State Engine ── */
+  const [activeApplication, setActiveApplication] = useState(
+    "NADRA CNIC Address Update",
+  );
+  const [readiness, setReadiness] = useState(75);
+  const [missingDocs, setMissingDocs] = useState(1);
+  const [documents, setDocuments] = useState([
+    { id: 1, label: "CNIC Copy", status: "verified" },
+    { id: 2, label: "Proof of Residence", status: "missing" },
+    { id: 3, label: "Fee Payment", status: "paid" },
+  ]);
+  const [insight, setInsight] = useState({
+    message:
+      "Your uploaded utility bill is older than 3 months. Upload a recent bill to avoid counter rejection.",
+  });
+
+  /* ── Modal State ── */
+  const [officeModal, setOfficeModal] = useState(false);
+  const [roadmapModal, setRoadmapModal] = useState(false);
+  const [newAppModal, setNewAppModal] = useState(false);
+  const [agentsModal, setAgentsModal] = useState(false);
+  const [missingDocModal, setMissingDocModal] = useState(false);
+  const [allTasksComplete, setAllTasksComplete] = useState(false);
+
+  /* ── Feature State ── */
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  /* ── Toast State ── */
+  const [toast, setToast] = useState({ message: "", type: "success" });
+
+  const hasApplication = activeApplication !== null;
+
+  /* ── Skeleton loading on mount ── */
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  /* ── Cancel Application Handler ── */
+  const handleCancelApplication = useCallback(() => {
+    setActiveApplication(null);
+    setReadiness(0);
+    setMissingDocs(0);
+    setDocuments([]);
+    setAllTasksComplete(false);
+    setInsight({
+      message:
+        "Select a service (e.g., CNIC, Passport, License) to initiate agent document verification.",
+    });
+    setToast({ message: "Application cancelled", type: "info" });
+  }, []);
+
+  /* ── New Application Handler ── */
+  const handleStartApplication = useCallback((service) => {
+    setActiveApplication(service.label);
+    setReadiness(10);
+    setMissingDocs(3);
+    setAllTasksComplete(false);
+    setDocuments([
+      { id: 1, label: "Identity Document", status: "missing" },
+      { id: 2, label: "Proof of Address", status: "missing" },
+      { id: 3, label: "Fee Payment", status: "missing" },
+    ]);
+    setInsight({
+      message: `Starting ${service.label} application. Upload your documents to begin preparation.`,
+    });
+    setToast({ message: `Application started: ${service.label}`, type: "success" });
+  }, []);
+
+  /* ── AI Verification Handler ── */
+  const handleAIVerification = useCallback(() => {
+    setDocuments((prev) =>
+      prev.map((doc) =>
+        doc.label === "Proof of Residence" || doc.label === "Proof of Address"
+          ? { ...doc, status: "verified" }
+          : doc,
+      ),
+    );
+    setReadiness(100);
+    setMissingDocs(0);
+    setAllTasksComplete(true);
+    setInsight({
+      message: "All documents verified! Proceed to Gate 2.",
+    });
+    setShowConfetti(true);
+    setToast({ message: "AI verification complete — all documents verified", type: "success" });
+  }, []);
+
+  return (
+    <div
+      className="min-h-screen transition-colors"
+      style={{ background: theme.bg }}
+    >
+      {/* Confetti celebration */}
+      <Confetti
+        active={showConfetti}
+        duration={3500}
+        onComplete={() => setShowConfetti(false)}
+      />
+
+      <main className="mx-auto max-w-[900px] px-4 pt-5 pb-24 sm:px-6">
+        <PageTransition key={activeTab} tabKey={activeTab}>
+          {/* Skeleton loading state */}
+          {loading && activeTab === "home" && <SkeletonDashboard />}
+
+          {!loading && activeTab === "home" && (
+            <>
+              {/* Welcome Header */}
+              <div className="stagger-1">
+                <WelcomeHeader
+                  userName="John Doe"
+                  readiness={readiness}
+                  missingDocs={missingDocs}
+                />
+              </div>
+
+              {/* Active Application Banner */}
+              <div className="stagger-1 mt-4">
+                <ActiveApplicationBanner
+                  application={activeApplication}
+                  hasApplication={hasApplication}
+                  onClick={() => {
+                    if (hasApplication) setAgentsModal(true);
+                    else setNewAppModal(true);
+                  }}
+                />
+              </div>
+
+              {/* ── Responsive Grid ── */}
+              <div className="stagger-2 mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {/* Next Action Items */}
+                <NextActionItems
+                  hasApplication={hasApplication}
+                  completed={allTasksComplete}
+                  actions={
+                    hasApplication
+                      ? [
+                          {
+                            id: 1,
+                            label: allTasksComplete
+                              ? "All Tasks Complete"
+                              : "Upload Proof of Address",
+                            badge: allTasksComplete
+                              ? null
+                              : "Required by Missing Info Agent",
+                            icon: allTasksComplete ? (
+                              <CheckCircle2 size={16} />
+                            ) : (
+                              <Upload size={16} />
+                            ),
+                            onClick: allTasksComplete
+                              ? undefined
+                              : () => setMissingDocModal(true),
+                          },
+                        ]
+                      : []
+                  }
+                  prep={
+                    hasApplication
+                      ? [
+                          {
+                            id: 1,
+                            label: "Locate Regional Desk & Gate 2",
+                            icon: <MapPin size={16} />,
+                            onClick: () => setOfficeModal(true),
+                          },
+                        ]
+                      : []
+                  }
+                  onSelectService={() => setNewAppModal(true)}
+                />
+
+                {/* Current Tasks — AI Document Audit Matrix */}
+                <CurrentTasks
+                  documents={documents}
+                  insight={insight}
+                  hasApplication={hasApplication}
+                />
+
+                {/* Quick Access Hub */}
+                <QuickAccessHub
+                  onNewApplication={() => setNewAppModal(true)}
+                  onDocumentVault={() => setActiveTab("documents")}
+                  onRoadmap={() => setRoadmapModal(true)}
+                  onFindOffice={() => setOfficeModal(true)}
+                />
+              </div>
+
+              {/* Upcoming Visit Tracker */}
+              <div className="stagger-3 mt-6">
+                <VisitTracker
+                  hasApplication={hasApplication}
+                  onCancelApplication={handleCancelApplication}
+                  onGetDirections={() => setOfficeModal(true)}
+                />
+              </div>
+            </>
+          )}
+
+          {activeTab === "documents" && <Documents />}
+          {activeTab === "visits" && <Visits />}
+          {activeTab === "help" && <Help />}
+        </PageTransition>
+      </main>
+
+      {/* Bottom Navigation */}
+      <Bottomnav activeTab={activeTab} onTabClick={setActiveTab} />
+
+      {/* ── Global Modals ── */}
+      <MissingDocAgentModal
+        open={missingDocModal}
+        onClose={() => setMissingDocModal(false)}
+        onComplete={handleAIVerification}
+      />
+      <OfficeFinder
+        open={officeModal}
+        onClose={() => setOfficeModal(false)}
+      />
+      <VisitRoadmap
+        open={roadmapModal}
+        onClose={() => setRoadmapModal(false)}
+      />
+      <NewApplicationModal
+        open={newAppModal}
+        onClose={() => setNewAppModal(false)}
+        onStartApplication={handleStartApplication}
+      />
+      <AgentStatusModal
+        open={agentsModal}
+        onClose={() => setAgentsModal(false)}
+        onStartNewApplication={() => {
+          setAgentsModal(false);
+          setNewAppModal(true);
+        }}
+      />
+
+      {/* ── Toast ── */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: "", type: "success" })}
+      />
+
+      {/* AI Chat Widget */}
+      <AIChatWidget />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppInner />
+    </ThemeProvider>
+  );
+}
+
+export default App;
