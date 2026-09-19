@@ -38,11 +38,27 @@ const URDU_PRESETS = [
   { label: "Driving License Permanent Test", text: "Learner permit ko 42 din guzar chuke hain, permanent driving test dena hai", serviceId: "license" },
 ];
 
+const getDefaultSituation = (serviceId, lang) => {
+  if (lang === "urdu") {
+    if (serviceId === "passport") return "Mujhe urgent 5-year passport banwana hai, online fee jama karwayi hai";
+    if (serviceId === "license") return "Learner permit ko 42 din guzar chuke hain, permanent driving test dena hai";
+    if (serviceId === "property") return "Property transfer aur registry ke papers ki tasdeeq karwani hai";
+    if (serviceId === "education") return "Degrees aur certificates ki attestation aur verification karwani hai";
+    return "Mera CNIC gum ho gaya hai, purani copy hai lekin mai akela ja raha hoon koi relative sath nahi hai";
+  } else {
+    if (serviceId === "passport") return "Passport expiring next month, need urgent renewal";
+    if (serviceId === "license") return "42 days passed since learner permit, need permanent test";
+    if (serviceId === "property") return "Property registry transfer, need required NOC and stamp duty details";
+    if (serviceId === "education") return "Educational degree attestation, need IBCC and HEC verification checklist";
+    return "Lost CNIC, no birth certificate, going alone";
+  }
+};
+
 const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isAnalyzing = false }) => {
   const { theme } = useTheme();
   const [selected, setSelected] = useState("cnic");
-  const [situation, setSituation] = useState("Lost CNIC, no birth certificate, going alone");
-  const [presetLang, setPresetLang] = useState("urdu"); // default to Urdu for high impact!
+  const [presetLang, setPresetLang] = useState("urdu");
+  const [situation, setSituation] = useState(getDefaultSituation("cnic", "urdu"));
   const [isListening, setIsListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(true);
 
@@ -54,6 +70,42 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
       }
     }
   }, []);
+
+  const handleSelectService = (serviceId) => {
+    setSelected(serviceId);
+    setSituation(getDefaultSituation(serviceId, presetLang));
+  };
+
+  const handleChangeLang = (newLang) => {
+    setPresetLang(newLang);
+    setSituation(getDefaultSituation(selected, newLang));
+  };
+
+  const getDynamicPlaceholder = () => {
+    if (selected === "passport") {
+      return presetLang === "urdu"
+        ? "e.g. Urgent passport banwana hai, fee receipt jama hai ya nahi..."
+        : "e.g. Passport renewal, urgent 5-year or 10-year, appointment and fee...";
+    }
+    if (selected === "license") {
+      return presetLang === "urdu"
+        ? "e.g. Learner license expired, permanent driving test ki date..."
+        : "e.g. Learner driving permit 42 days passed, need sign test and track test...";
+    }
+    if (selected === "property") {
+      return presetLang === "urdu"
+        ? "e.g. Plot ki registry transfer karwani hai, fard aur stamp duty..."
+        : "e.g. Property transfer, need Fard, NOC and stamp paper verification...";
+    }
+    if (selected === "education") {
+      return presetLang === "urdu"
+        ? "e.g. Matric / Inter ya University degree attest karwani hai..."
+        : "e.g. Degree attestation, need IBCC / HEC verification checklist...";
+    }
+    return presetLang === "urdu"
+      ? "e.g. Mera CNIC gum ho gaya hai, purani copy hai lekin mai akela ja raha hoon..."
+      : "e.g. Lost CNIC, have photocopy, father is abroad, need urgent card...";
+  };
 
   const handleToggleVoice = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -117,7 +169,7 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
                 <button
                   key={svc.id}
                   type="button"
-                  onClick={() => setSelected(svc.id)}
+                  onClick={() => handleSelectService(svc.id)}
                   className="flex items-center gap-3 rounded-xl p-3 text-left transition-all cursor-pointer"
                   style={{
                     background: isActive ? theme.accent + "18" : theme.surfaceAlt,
@@ -151,7 +203,7 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
             <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: theme.surfaceAlt, border: `1px solid ${theme.border}` }}>
               <button
                 type="button"
-                onClick={() => setPresetLang("urdu")}
+                onClick={() => handleChangeLang("urdu")}
                 className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
                 style={{
                   background: presetLang === "urdu" ? theme.accent : "transparent",
@@ -162,7 +214,7 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
               </button>
               <button
                 type="button"
-                onClick={() => setPresetLang("english")}
+                onClick={() => handleChangeLang("english")}
                 className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
                 style={{
                   background: presetLang === "english" ? theme.accent : "transparent",
@@ -232,7 +284,7 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
             value={situation}
             onChange={(e) => setSituation(e.target.value)}
             rows={3}
-            placeholder="e.g. Mera CNIC gum ho gaya hai, purani copy hai lekin mai akela ja raha hoon..."
+            placeholder={getDynamicPlaceholder()}
             className="w-full rounded-xl p-3 text-xs leading-relaxed outline-none transition-all"
             style={{
               background: theme.surfaceAlt,
