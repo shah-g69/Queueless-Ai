@@ -355,57 +355,69 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
         </Card>
       </div>
 
-      {/* ── 4. Live Queue Congestion Heatmap (Option 4) ── */}
+      {/* ── 4. Live Waiting Times & Office Crowds (Easy to Understand) ── */}
       <Card>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
           <div>
             <div className="flex items-center gap-2">
-              <Clock size={16} className="text-teal-600" />
+              <Clock size={18} className="text-teal-600" />
               <h4 className="text-sm font-bold" style={{ color: theme.text }}>
-                ⏱️ Real-Time Queue Heatmap & Peak Hours (Islamabad / Rawalpindi)
+                🚦 Live Waiting Times & Office Crowds (Islamabad / Rawalpindi)
               </h4>
             </div>
             <p className="text-[11px]" style={{ color: theme.textMuted }}>
-              Live wait-time estimations calculated by QueueLess Route Agent
+              Check how crowded offices are right now before leaving your home
             </p>
           </div>
-          <span className="rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5">
-            🟢 Best Window: 8:30 PM – 2:00 AM
+          <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold px-3 py-1 border border-emerald-300/40">
+            💡 AI Advice: Visit Blue Area tonight to save 1 hour!
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          <div className="rounded-xl p-3 border border-emerald-200 bg-emerald-50/50">
+          {/* Blue Area 24/7 Mega Center */}
+          <div className="rounded-xl p-3.5 border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-900">Blue Area 24/7 Mega Center</span>
-              <span className="text-[10px] font-extrabold bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded">
-                LOW RUSH
+              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">Blue Area 24/7 Mega Center</span>
+              <span className="text-[10px] font-extrabold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                🟢 FAST
               </span>
             </div>
-            <p className="text-lg font-black text-emerald-700 mt-1">~15-20 mins</p>
-            <p className="text-[11px] text-emerald-800 mt-0.5">Optimal for night visits after 8:30 PM</p>
+            <p className="text-xl font-black text-emerald-700 dark:text-emerald-400 mt-1.5">~15 Minutes</p>
+            <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Short Lines (Quick Visit)</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+              Best window: Tonight after 8:30 PM for almost zero waiting.
+            </p>
           </div>
 
-          <div className="rounded-xl p-3 border border-red-200 bg-red-50/50">
+          {/* G-10 Regional Center */}
+          <div className="rounded-xl p-3.5 border border-red-200 bg-red-50/60 dark:bg-red-950/20">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-red-900">G-10 Regional Center</span>
-              <span className="text-[10px] font-extrabold bg-red-200 text-red-900 px-1.5 py-0.5 rounded">
-                HEAVY PEAK
+              <span className="text-xs font-bold text-red-900 dark:text-red-300">G-10 Regional Center</span>
+              <span className="text-[10px] font-extrabold bg-red-200 text-red-900 px-2 py-0.5 rounded-full">
+                🔴 CROWDED
               </span>
             </div>
-            <p className="text-lg font-black text-red-700 mt-1">~85-95 mins</p>
-            <p className="text-[11px] text-red-800 mt-0.5">Heavy morning backlog; reach at 8:00 AM</p>
+            <p className="text-xl font-black text-red-700 dark:text-red-400 mt-1.5">~1.5 Hours Wait</p>
+            <p className="text-[11px] font-semibold text-red-800 dark:text-red-300">Heavy Rush (Long Queues)</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+              Large daytime backlog. Arrive at 8:00 AM sharp or choose Blue Area.
+            </p>
           </div>
 
-          <div className="rounded-xl p-3 border border-amber-200 bg-amber-50/50">
+          {/* G-10/4 Passport Office */}
+          <div className="rounded-xl p-3.5 border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-900">G-10/4 Passport Office</span>
-              <span className="text-[10px] font-extrabold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">
-                MODERATE
+              <span className="text-xs font-bold text-amber-900 dark:text-amber-300">G-10/4 Passport Office</span>
+              <span className="text-[10px] font-extrabold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                🟡 MODERATE
               </span>
             </div>
-            <p className="text-lg font-black text-amber-700 mt-1">~40-50 mins</p>
-            <p className="text-[11px] text-amber-800 mt-0.5">Pay fee online via app before token</p>
+            <p className="text-xl font-black text-amber-700 dark:text-amber-400 mt-1.5">~45 Minutes</p>
+            <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">Medium Lines (Normal)</p>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+              Tip: Pay fee via Passport app or 1Bill before taking a token.
+            </p>
           </div>
         </div>
       </Card>
