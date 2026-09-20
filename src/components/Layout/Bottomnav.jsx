@@ -16,10 +16,10 @@ const Bottomnav = ({ activeTab = "home", onTabClick = () => {} }) => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 z-50 w-full"
+      className="fixed bottom-0 left-0 z-50 w-full backdrop-blur-md"
       style={{
         background: theme.navBg,
-        borderTop: `1px solid ${theme.border}`,
+        borderTop: `1px solid ${theme.navBorder || theme.border}`,
       }}
     >
       <div className="mx-auto flex max-w-[900px] items-center justify-around py-2">

@@ -4,6 +4,7 @@ import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
 import NextActionItems from "./components/Home/actionitems";
 import CurrentTasks from "./components/Home/CurrenTask";
+import AIAgentFeed from "./components/Home/AIAgentFeed";
 import QuickAccessHub from "./components/Home/QuickAccessHub";
 import VisitTracker from "./components/Home/VisitTracker";
 import AIResultsDashboard from "./components/Home/AIResultsDashboard";
@@ -265,9 +266,23 @@ function AppInner() {
 
   return (
     <div
-      className="min-h-screen transition-colors"
+      className="relative min-h-screen overflow-hidden transition-colors"
       style={{ background: theme.bg }}
     >
+      {/* ── Ambient glassmorphism glow blobs ── */}
+      <div
+        className="pointer-events-none absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full blur-[120px]"
+        style={{ background: theme.glow1 }}
+      />
+      <div
+        className="pointer-events-none absolute -right-24 top-1/3 h-[400px] w-[400px] rounded-full blur-[100px]"
+        style={{ background: theme.glow2 }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 left-1/3 h-[350px] w-[350px] rounded-full blur-[110px]"
+        style={{ background: theme.glow3 }}
+      />
+
       {/* Confetti celebration */}
       <Confetti
         active={showConfetti}
@@ -275,7 +290,7 @@ function AppInner() {
         onComplete={() => setShowConfetti(false)}
       />
 
-      <main className="mx-auto max-w-[900px] px-4 pt-5 pb-24 sm:px-6">
+      <main className="mx-auto max-w-[1200px] px-4 pt-5 pb-24 sm:px-6">
         <PageTransition key={activeTab} tabKey={activeTab}>
           {/* Skeleton loading state */}
           {loading && activeTab === "home" && <SkeletonDashboard />}
@@ -292,7 +307,7 @@ function AppInner() {
               </div>
 
               {/* Active Application Banner */}
-              <div className="stagger-1 mt-4">
+              <div className="stagger-1 mt-5">
                 <ActiveApplicationBanner
                   application={activeApplication}
                   hasApplication={hasApplication}
@@ -303,8 +318,11 @@ function AppInner() {
                 />
               </div>
 
-              {/* ── Responsive Grid ── */}
-              <div className="stagger-2 mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {/* ── Responsive Columns — equal height, capped to viewport ── */}
+              <div
+                className="stagger-2 mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+                style={{ gridAutoRows: "1fr" }}
+              >
                 <NextActionItems
                   hasApplication={hasApplication}
                   completed={allTasksComplete}
@@ -348,6 +366,10 @@ function AppInner() {
 
                 <CurrentTasks
                   documents={documents}
+                  hasApplication={hasApplication}
+                />
+
+                <AIAgentFeed
                   insight={insight}
                   hasApplication={hasApplication}
                 />
@@ -370,7 +392,7 @@ function AppInner() {
               )}
 
               {/* Upcoming Visit Tracker */}
-              <div className="stagger-3 mt-6">
+              <div className="stagger-3 mt-8">
                 <VisitTracker
                   hasApplication={hasApplication}
                   onCancelApplication={handleCancelApplication}
@@ -536,9 +558,9 @@ function AppInner() {
                 onClick={() => handleChatSend(q)}
                 className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
                 style={{
-                  background: theme.accent + "12",
+                  background: "#ffffff",
                   color: theme.accent,
-                  border: `1px solid ${theme.accent}30`,
+                  border: `1px solid rgba(226,232,240,0.8)`,
                 }}
               >
                 {q}

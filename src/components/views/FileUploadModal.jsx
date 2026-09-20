@@ -40,7 +40,9 @@ const FileUploadModal = ({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    setPhase("scanning");
+    await new Promise((r) => setTimeout(r, 2000));
     onUpload(files);
     setFiles([]);
     setPhase("select");
@@ -111,8 +113,8 @@ const FileUploadModal = ({
             <div
               className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed py-10 transition-colors cursor-pointer"
               style={{
-                borderColor: dragOver ? theme.accent : theme.border,
-                background: dragOver ? theme.accent + "08" : theme.surfaceAlt,
+                borderColor: dragOver ? theme.accent : theme.borderSoft,
+                background: dragOver ? theme.accent + "08" : theme.inputBg,
               }}
               onDragOver={(e) => {
                 e.preventDefault();
@@ -122,21 +124,45 @@ const FileUploadModal = ({
               onDrop={handleDrop}
               onClick={() => inputRef.current?.click()}
             >
-              <Upload
-                size={32}
-                strokeWidth={1.5}
-                className="mb-2"
-                style={{ color: dragOver ? theme.accent : theme.textMuted }}
-              />
-              <p className="text-sm font-medium" style={{ color: theme.text }}>
-                Drag &amp; drop files here
-              </p>
-              <p className="mt-1 text-xs" style={{ color: theme.textMuted }}>
-                or click to browse
-              </p>
-              <p className="mt-1 text-[10px]" style={{ color: theme.textMuted }}>
-                JPG, PNG, or PDF — max 10MB
-              </p>
+              {files.length > 0 ? (
+                <>
+                  <div
+                    className="mb-2 flex h-10 w-10 items-center justify-center rounded-full"
+                    style={{ background: "#22c55e18" }}
+                  >
+                    <CheckCircle2 size={22} style={{ color: "#22c55e" }} />
+                  </div>
+                  <p className="max-w-[220px] truncate text-sm font-semibold" style={{ color: theme.text }}>
+                    {files[0].name}
+                  </p>
+                  {files.length > 1 && (
+                    <p className="mt-1 text-xs" style={{ color: theme.textMuted }}>
+                      +{files.length - 1} more file{files.length > 2 ? "s" : ""}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs" style={{ color: theme.accent }}>
+                    Tap to add more files
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Upload
+                    size={32}
+                    strokeWidth={1.5}
+                    className="mb-2"
+                    style={{ color: dragOver ? theme.accent : theme.textMuted }}
+                  />
+                  <p className="text-sm font-medium" style={{ color: theme.text }}>
+                    Drag &amp; drop files here
+                  </p>
+                  <p className="mt-1 text-xs" style={{ color: theme.textMuted }}>
+                    or click to browse
+                  </p>
+                  <p className="mt-1 text-[10px]" style={{ color: theme.textMuted }}>
+                    JPG, PNG, or PDF — max 10MB
+                  </p>
+                </>
+              )}
             </div>
 
             <input
@@ -157,8 +183,11 @@ const FileUploadModal = ({
                 {files.map((file, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-lg px-3 py-2"
-                    style={{ background: theme.surfaceAlt }}
+                    className="flex items-center justify-between rounded-lg border px-3 py-2"
+                    style={{
+                      background: theme.inputBg,
+                      borderColor: theme.borderSoft,
+                    }}
                   >
                     <div className="flex items-center gap-2">
                       <FileText size={14} style={{ color: theme.accent }} />

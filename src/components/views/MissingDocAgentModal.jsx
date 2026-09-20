@@ -120,21 +120,27 @@ const MissingDocAgentModal = ({ open, onClose, onComplete = () => {} }) => {
             <div
               className="rounded-xl p-3"
               style={{
-                background: "#fef9c3",
-                border: "1px solid #fde047",
+                background: theme.alertBg,
+                border: `1px solid ${theme.alertBorder}`,
               }}
             >
               <div className="flex items-start gap-2">
                 <AlertTriangle
                   size={16}
                   className="mt-0.5 shrink-0"
-                  style={{ color: "#ca8a04" }}
+                  style={{ color: theme.alertText }}
                 />
                 <div>
-                  <p className="text-xs font-bold text-amber-800">
+                  <p
+                    className="text-xs font-bold"
+                    style={{ color: theme.alertText }}
+                  >
                     Missing Document
                   </p>
-                  <p className="mt-0.5 text-xs text-amber-700">
+                  <p
+                    className="mt-0.5 text-xs"
+                    style={{ color: theme.alertText, opacity: 0.85 }}
+                  >
                     <strong>Required:</strong> Utility Bill under 3 months old
                     or Registered Lease Agreement
                   </p>
@@ -146,7 +152,7 @@ const MissingDocAgentModal = ({ open, onClose, onComplete = () => {} }) => {
             <div
               className="rounded-xl p-3"
               style={{
-                background: theme.accent + "08",
+                background: theme.innerBg,
                 border: `1px solid ${theme.accent}25`,
               }}
             >

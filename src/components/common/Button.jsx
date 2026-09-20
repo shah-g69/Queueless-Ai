@@ -19,7 +19,7 @@ const Button = ({
 }) => {
   const { theme } = useTheme();
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-150 cursor-pointer select-none whitespace-nowrap hover:opacity-90 active:scale-95";
+    "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-150 cursor-pointer select-none hover:opacity-90 active:scale-95";
 
   const variantStyles = {
     primary: {

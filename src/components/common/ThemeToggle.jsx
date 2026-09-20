@@ -29,13 +29,13 @@ const ThemeToggle = () => {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" style={{ zIndex: 60 }}>
       <button
         onClick={() => setOpen((p) => !p)}
         className="flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer"
         style={{
-          borderColor: theme.border,
-          background: theme.surfaceAlt,
+          borderColor: theme.borderSoft,
+          background: theme.surfaceSolid,
           color: theme.text,
         }}
       >
@@ -49,10 +49,11 @@ const ThemeToggle = () => {
 
       {open && (
         <div
-          className="absolute right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border py-1 shadow-lg"
+          className="absolute right-0 mt-2 w-52 overflow-hidden rounded-xl border py-1 shadow-2xl"
           style={{
-            background: theme.surface,
-            borderColor: theme.border,
+            zIndex: 9999,
+            background: theme.surfaceSolid,
+            borderColor: theme.borderSoft,
           }}
         >
           {options.map((opt) => {
@@ -72,7 +73,7 @@ const ThemeToggle = () => {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background =
-                    mode === opt.key ? `${theme.accent}25` : theme.surfaceAlt;
+                    mode === opt.key ? `${theme.accent}25` : theme.innerBg;
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background =

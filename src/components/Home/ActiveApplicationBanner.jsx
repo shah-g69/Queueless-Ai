@@ -25,7 +25,7 @@ const ActiveApplicationBanner = ({
   return (
     <div
       onClick={onClick}
-      className="flex items-center justify-between rounded-xl px-4 py-3 cursor-pointer transition-all hover:border-teal-500 hover:shadow-md"
+      className="flex items-center justify-between rounded-xl px-4 py-3 backdrop-blur-sm cursor-pointer transition-all hover:border-teal-500 hover:shadow-md"
       style={{
         background: hasApplication ? theme.accent + "10" : theme.surfaceAlt,
         border: `1px solid ${hasApplication ? theme.accent + "30" : theme.border}`,

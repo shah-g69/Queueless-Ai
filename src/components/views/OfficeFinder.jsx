@@ -204,7 +204,7 @@ const OfficeFinder = ({ open, onClose }) => {
         {locationError && (
           <div
             className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs"
-            style={{ background: "#fef2f2", color: "#dc2626" }}
+            style={{ background: theme.errorBg, color: theme.errorText }}
           >
             <AlertCircle size={14} />
             {locationError}

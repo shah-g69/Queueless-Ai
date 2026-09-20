@@ -1,7 +1,17 @@
-import { Upload, MapPin, Sparkles, CheckCircle2, Plus } from "lucide-react";
+import {
+  Upload,
+  MapPin,
+  Sparkles,
+  CheckCircle2,
+  Plus,
+  FileText,
+  AlertTriangle,
+  Inbox,
+} from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import Card from "../common/Card";
 import Button from "../common/Button";
+import StatusBadge from "../common/StatusBadge";
 
 /**
  * NextActionItems – Context-aware action items and visit prep steps.
@@ -9,6 +19,7 @@ import Button from "../common/Button";
  * Props:
  *   actions        – array of { id, label, badge?, icon?, onClick }
  *   prep           – array of { id, label, icon?, onClick }
+ *   documents      – array of { id, label, status } for the task checklist
  *   completed      – boolean, shows "All Tasks Complete" when true
  *   hasApplication – boolean, false shows empty state
  *   onSelectService – callback for empty state button
@@ -16,18 +27,29 @@ import Button from "../common/Button";
 const NextActionItems = ({
   actions = [],
   prep = [],
+  documents = [],
   completed = false,
   hasApplication = true,
   onSelectService = () => {},
 }) => {
   const { theme } = useTheme();
 
+  const statusConfig = {
+    verified: { variant: "green", label: "Verified", Icon: CheckCircle2, color: "#22c55e" },
+    missing: { variant: "yellow", label: "Missing", Icon: AlertTriangle, color: "#eab308" },
+    paid: { variant: "green", label: "Paid", Icon: CheckCircle2, color: "#22c55e" },
+  };
+
+  const verifiedCount = documents.filter(
+    (d) => d.status === "verified" || d.status === "paid",
+  ).length;
+
   return (
-    <div>
+    <div className="flex min-w-0 flex-col">
       <h2 className="mb-3 text-base font-bold" style={{ color: theme.text }}>
         Next Action Items
       </h2>
-      <Card>
+      <Card className="flex-1 overflow-hidden">
         {/* ── No Application state ── */}
         {!hasApplication && (
           <div className="flex flex-col items-center py-6 text-center">
@@ -107,7 +129,7 @@ const NextActionItems = ({
             )}
 
             {prep.length > 0 && (
-              <div>
+              <div className="mb-5">
                 <p className="mb-2 text-sm font-bold" style={{ color: theme.text }}>
                   Visit Preparation
                 </p>
@@ -124,6 +146,55 @@ const NextActionItems = ({
                     </Button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* ── Task Checklist ── */}
+            {documents.length > 0 && (
+              <div>
+                <p className="mb-2 text-sm font-bold" style={{ color: theme.text }}>
+                  Task Checklist
+                </p>
+                <div
+                  className="flex flex-col gap-1"
+                  style={{
+                    maxHeight: 260,
+                    overflowY: "auto",
+                  }}
+                >
+                  {documents.map((doc) => {
+                    const cfg = statusConfig[doc.status] ?? statusConfig.missing;
+                    return (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5"
+                        style={{ background: theme.surfaceAlt }}
+                      >
+                        <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                          <FileText size={16} className="shrink-0" style={{ color: theme.textMuted }} />
+                          <span
+                            className="min-w-0 flex-1 text-sm font-medium leading-snug"
+                            style={{
+                              color: theme.text,
+                              overflowWrap: "break-word",
+                              wordBreak: "normal",
+                              hyphens: "auto",
+                            }}
+                          >
+                            {doc.label}
+                          </span>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1.5">
+                          {cfg.Icon && <cfg.Icon size={14} style={{ color: cfg.color }} />}
+                          <StatusBadge variant={cfg.variant}>{cfg.label}</StatusBadge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-xs" style={{ color: theme.textMuted }}>
+                  {verifiedCount}/{documents.length} documents ready
+                </p>
               </div>
             )}
           </>

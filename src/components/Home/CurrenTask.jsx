@@ -2,7 +2,6 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
-  Bot,
   Inbox,
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
@@ -10,16 +9,14 @@ import Card from "../common/Card";
 import StatusBadge from "../common/StatusBadge";
 
 /**
- * CurrentTasks – AI Document Audit Matrix with agent insight.
+ * CurrentTasks – AI Document Audit Matrix.
  *
  * Props:
  *   documents      – array of { id, label, status }
- *   insight        – { message }
  *   hasApplication – boolean
  */
 const CurrentTasks = ({
   documents = [],
-  insight = { message: "" },
   hasApplication = true,
 }) => {
   const { theme } = useTheme();
@@ -35,11 +32,11 @@ const CurrentTasks = ({
   ).length;
 
   return (
-    <div>
+    <div className="flex min-w-0 flex-col">
       <h2 className="mb-3 text-base font-bold" style={{ color: theme.text }}>
         Current Tasks
       </h2>
-      <Card>
+      <Card className="flex-1 overflow-hidden">
         {/* ── Empty state ── */}
         {!hasApplication || documents.length === 0 ? (
           <div className="flex flex-col items-center py-6 text-center">
@@ -58,23 +55,37 @@ const CurrentTasks = ({
           </div>
         ) : (
           <>
-            {/* AI Document Audit Matrix */}
-            <div className="mb-4 flex flex-col gap-1">
+            {/* AI Document Audit Matrix — internal scroll keeps card within viewport */}
+            <div
+              className="flex flex-col gap-1"
+              style={{
+                maxHeight: 260,
+                overflowY: "auto",
+              }}
+            >
               {documents.map((doc) => {
                 const cfg = statusConfig[doc.status] ?? statusConfig.missing;
                 return (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2.5"
+                    className="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5"
                     style={{ background: theme.surfaceAlt }}
                   >
-                    <div className="flex items-center gap-2.5">
-                      <FileText size={16} style={{ color: theme.textMuted }} />
-                      <span className="text-sm font-medium" style={{ color: theme.text }}>
+                    <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                      <FileText size={16} className="shrink-0" style={{ color: theme.textMuted }} />
+                      <span
+                        className="min-w-0 flex-1 text-sm font-medium leading-snug"
+                        style={{
+                          color: theme.text,
+                          overflowWrap: "break-word",
+                          wordBreak: "normal",
+                          hyphens: "auto",
+                        }}
+                      >
                         {doc.label}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                       {cfg.Icon && <cfg.Icon size={14} style={{ color: cfg.color }} />}
                       <StatusBadge variant={cfg.variant}>{cfg.label}</StatusBadge>
                     </div>
@@ -84,32 +95,9 @@ const CurrentTasks = ({
             </div>
 
             {/* Summary */}
-            <p className="mb-3 text-xs" style={{ color: theme.textMuted }}>
+            <p className="mt-3 text-xs" style={{ color: theme.textMuted }}>
               {verifiedCount}/{documents.length} documents ready
             </p>
-
-            {/* AI Agent Insight */}
-            {insight && (
-              <div
-                className="flex items-start gap-3 rounded-xl px-4 py-3"
-                style={{ background: theme.accent + "10", border: `1px solid ${theme.accent}25` }}
-              >
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: theme.accent + "20" }}
-                >
-                  <Bot size={16} style={{ color: theme.accent }} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold" style={{ color: theme.accent }}>
-                    AI Agent Insight
-                  </p>
-                  <p className="mt-0.5 text-xs leading-relaxed" style={{ color: theme.text }}>
-                    {insight.message}
-                  </p>
-                </div>
-              </div>
-            )}
           </>
         )}
       </Card>

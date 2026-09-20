@@ -44,15 +44,19 @@ const Modal = ({ open, onClose, title, children, width = "max-w-lg" }) => {
       onClick={onClose}
     >
       <div
-        className={`${width} w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6 shadow-2xl`}
+        className={`${width} w-full max-h-[90vh] overflow-y-auto rounded-3xl p-6 shadow-2xl`
+        }
         style={{
-          background: theme.surface,
-          border: `1px solid ${theme.border}`,
+          background: theme.surfaceSolid,
+          border: `1px solid ${theme.borderSoft}`,
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 mb-4 flex items-center justify-between" style={{ background: theme.surface }}>
+        <div
+          className="sticky top-0 z-10 mb-5 flex items-center justify-between"
+          style={{ background: theme.surfaceSolid }}
+        >
           <h3 className="text-lg font-bold" style={{ color: theme.text }}>
             {title}
           </h3>

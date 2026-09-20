@@ -172,15 +172,15 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
                   onClick={() => handleSelectService(svc.id)}
                   className="flex items-center gap-3 rounded-xl p-3 text-left transition-all cursor-pointer"
                   style={{
-                    background: isActive ? theme.accent + "18" : theme.surfaceAlt,
-                    border: `1.5px solid ${isActive ? theme.accent : theme.border}`,
+                    background: isActive ? theme.accent + "18" : theme.inputBg,
+                    border: `1.5px solid ${isActive ? theme.accent : theme.borderSoft}`,
                   }}
                 >
                   <div
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
                     style={{ background: isActive ? theme.accent : theme.border }}
                   >
-                    <Icon size={18} style={{ color: isActive ? "#ffffff" : theme.textMuted }} />
+                    <Icon size={18} style={{ color: isActive ? theme.accentText : theme.textMuted }} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-bold truncate" style={{ color: isActive ? theme.accent : theme.text }}>
@@ -200,14 +200,14 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
               Quick Demo Scenarios:
             </p>
-            <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: theme.surfaceAlt, border: `1px solid ${theme.border}` }}>
+            <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ background: theme.inputBg, border: `1px solid ${theme.borderSoft}` }}>
               <button
                 type="button"
                 onClick={() => handleChangeLang("urdu")}
                 className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
                 style={{
                   background: presetLang === "urdu" ? theme.accent : "transparent",
-                  color: presetLang === "urdu" ? "#ffffff" : theme.textMuted,
+                  color: presetLang === "urdu" ? theme.accentText : theme.textMuted,
                 }}
               >
                 🇵🇰 Roman Urdu
@@ -218,7 +218,7 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
                 className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold transition-all cursor-pointer"
                 style={{
                   background: presetLang === "english" ? theme.accent : "transparent",
-                  color: presetLang === "english" ? "#ffffff" : theme.textMuted,
+                  color: presetLang === "english" ? theme.accentText : theme.textMuted,
                 }}
               >
                 🇬🇧 English
@@ -234,9 +234,9 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
                 onClick={() => handleApplyPreset(preset)}
                 className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-all hover:opacity-80 cursor-pointer"
                 style={{
-                  background: situation === preset.text ? theme.accent : theme.surfaceAlt,
-                  color: situation === preset.text ? "#ffffff" : theme.textMuted,
-                  border: `1px solid ${theme.border}`,
+                  background: situation === preset.text ? theme.accent : theme.inputBg,
+                  color: situation === preset.text ? theme.accentText : theme.textMuted,
+                  border: `1px solid ${situation === preset.text ? theme.accent : theme.borderSoft}`,
                 }}
               >
                 ⚡ {preset.label}
@@ -287,8 +287,8 @@ const NewApplicationModal = ({ open, onClose, onStartApplication = () => {}, isA
             placeholder={getDynamicPlaceholder()}
             className="w-full rounded-xl p-3 text-xs leading-relaxed outline-none transition-all"
             style={{
-              background: theme.surfaceAlt,
-              border: `1px solid ${theme.border}`,
+              background: theme.inputBg,
+              border: `1px solid ${theme.borderSoft}`,
               color: theme.text,
             }}
           />
