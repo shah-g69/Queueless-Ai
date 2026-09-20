@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
@@ -21,7 +21,6 @@ import MissingDocAgentModal from "./components/views/MissingDocAgentModal";
 
 /* ── Features ── */
 import Toast from "./components/common/Toast";
-import AIChatWidget from "./components/common/AIChatWidget";
 import Confetti from "./components/common/Confetti";
 import { SkeletonDashboard } from "./components/common/Skeleton";
 
@@ -29,7 +28,32 @@ import { SkeletonDashboard } from "./components/common/Skeleton";
 import { queryQueueLessAI } from "./services/aiservices";
 
 /* ── Icons ── */
-import { Upload, MapPin, CheckCircle2, Plus } from "lucide-react";
+import {
+  Upload,
+  MapPin,
+  CheckCircle2,
+  MessageCircle,
+  X,
+  Bot,
+  Send,
+  Loader2,
+} from "lucide-react";
+
+/* ── Chat Data ── */
+const QUICK_QUESTIONS = [
+  "What documents do I need for NADRA CNIC update?",
+  "How do I reset my visit appointment?",
+  "Where is Gate 2 at the Executive Center?",
+];
+
+const AI_RESPONSES = {
+  "What documents do I need for NADRA CNIC update?":
+    "For a NADRA CNIC update, you need: (1) Original CNIC, (2) 2 passport-size photos, (3) Proof of address (utility bill less than 3 months old), (4) Birth Certificate or B-Form. Bring both originals and photocopies. Fee: PKR 1,500 for normal, PKR 2,500 for executive.",
+  "How do I reset my visit appointment?":
+    "To reset your visit appointment: Go to the Visits tab → find your upcoming visit → click 'Cancel Visit' → confirm. Then start a new application from the Quick Access Hub to schedule a fresh appointment.",
+  "Where is Gate 2 at the Executive Center?":
+    "Gate 2 at the NADRA Mega Center (Executive) in Blue Area, Islamabad is the main entrance for CNIC services. Enter through Gate 2, proceed to the Token Counter, then follow signs to Biometric Desk 4.",
+};
 
 /** Wrapper that renders the page content cleanly. */
 function PageTransition({ children }) {
@@ -72,6 +96,23 @@ function AppInner() {
   /* ── Toast State ── */
   const [toast, setToast] = useState({ message: "", type: "success" });
 
+  /* ── Global Chat State ── */
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      role: "ai",
+      text: "Hello! I'm your QueueLess Assistant. Ask me anything about NADRA document rules, passport applications, or your upcoming office visit.",
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatTyping, setChatTyping] = useState(false);
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, chatTyping]);
+
   const hasApplication = activeApplication !== null;
 
   /* ── Skeleton loading on mount ── */
@@ -79,6 +120,35 @@ function AppInner() {
     const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
+
+  /* ── Chat Handlers ── */
+  const simulateResponse = useCallback((msg) => {
+    setChatTyping(true);
+    const response =
+      AI_RESPONSES[msg] ||
+      `That's a great question about "${msg}". For the most accurate guidance, I recommend checking the specific service requirements in the Quick Access Hub or visiting the nearest office.`;
+    setTimeout(() => {
+      setChatMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: "ai", text: response },
+      ]);
+      setChatTyping(false);
+    }, 1000 + Math.random() * 800);
+  }, []);
+
+  const handleChatSend = useCallback(
+    (text) => {
+      const msg = text || chatInput.trim();
+      if (!msg) return;
+      setChatMessages((prev) => [
+        ...prev,
+        { id: Date.now(), role: "user", text: msg },
+      ]);
+      setChatInput("");
+      simulateResponse(msg);
+    },
+    [chatInput, simulateResponse],
+  );
 
   /* ── Cancel Application Handler ── */
   const handleCancelApplication = useCallback(() => {
@@ -235,7 +305,6 @@ function AppInner() {
 
               {/* ── Responsive Grid ── */}
               <div className="stagger-2 mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {/* Next Action Items */}
                 <NextActionItems
                   hasApplication={hasApplication}
                   completed={allTasksComplete}
@@ -277,14 +346,12 @@ function AppInner() {
                   onSelectService={() => setNewAppModal(true)}
                 />
 
-                {/* Current Tasks — AI Document Audit Matrix */}
                 <CurrentTasks
                   documents={documents}
                   insight={insight}
                   hasApplication={hasApplication}
                 />
 
-                {/* Quick Access Hub */}
                 <QuickAccessHub
                   onNewApplication={() => setNewAppModal(true)}
                   onDocumentVault={() => setActiveTab("documents")}
@@ -315,7 +382,9 @@ function AppInner() {
 
           {activeTab === "documents" && <Documents />}
           {activeTab === "visits" && <Visits />}
-          {activeTab === "help" && <Help />}
+          {activeTab === "help" && (
+            <Help onOpenChat={() => setIsChatOpen(true)} />
+          )}
         </PageTransition>
       </main>
 
@@ -328,14 +397,8 @@ function AppInner() {
         onClose={() => setMissingDocModal(false)}
         onComplete={handleAIVerification}
       />
-      <OfficeFinder
-        open={officeModal}
-        onClose={() => setOfficeModal(false)}
-      />
-      <VisitRoadmap
-        open={roadmapModal}
-        onClose={() => setRoadmapModal(false)}
-      />
+      <OfficeFinder open={officeModal} onClose={() => setOfficeModal(false)} />
+      <VisitRoadmap open={roadmapModal} onClose={() => setRoadmapModal(false)} />
       <NewApplicationModal
         open={newAppModal}
         onClose={() => setNewAppModal(false)}
@@ -358,8 +421,156 @@ function AppInner() {
         onClose={() => setToast({ message: "", type: "success" })}
       />
 
-      {/* AI Chat Widget */}
-      <AIChatWidget />
+      {/* ═══════════════════════════════════════════════════════
+          GLOBAL AI CHAT WIDGET — Single floating trigger
+          ═══════════════════════════════════════════════════════ */}
+
+      {/* Floating toggle button */}
+      <button
+        onClick={() => setIsChatOpen((p) => !p)}
+        className="fixed bottom-20 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+        style={{ background: theme.accent }}
+      >
+        {isChatOpen ? (
+          <X size={24} className="text-white" />
+        ) : (
+          <MessageCircle size={24} className="text-white" />
+        )}
+      </button>
+
+      {/* Docked chat widget */}
+      <div
+        className="fixed bottom-20 right-6 z-40 w-80 sm:w-96 rounded-2xl shadow-2xl border flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
+        style={{
+          background: theme.surface,
+          borderColor: theme.border,
+          height: isChatOpen ? "480px" : "0px",
+          opacity: isChatOpen ? 1 : 0,
+          transform: isChatOpen ? "translateY(0) scale(1)" : "translateY(12px) scale(0.95)",
+          pointerEvents: isChatOpen ? "auto" : "none",
+        }}
+      >
+        {/* Compact header */}
+        <div
+          className="flex items-center justify-between px-3 py-2.5 shrink-0"
+          style={{ background: theme.accent }}
+        >
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Bot size={18} className="text-white" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-400 border border-white" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-white leading-tight">
+                QueueLess AI Assistant
+              </p>
+              <p className="text-[9px] text-white/70">
+                Online • Instant replies
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsChatOpen(false)}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            <X size={14} />
+          </button>
+        </div>
+
+        {/* Scrollable messages */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {chatMessages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className="max-w-[85%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed"
+                style={{
+                  background:
+                    msg.role === "user" ? theme.accent : theme.surfaceAlt,
+                  color: msg.role === "user" ? "#ffffff" : theme.text,
+                  borderBottomRightRadius:
+                    msg.role === "user" ? "4px" : "16px",
+                  borderBottomLeftRadius:
+                    msg.role === "ai" ? "4px" : "16px",
+                }}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))}
+
+          {chatTyping && (
+            <div className="flex justify-start">
+              <div
+                className="flex items-center gap-1.5 rounded-2xl rounded-bl-md px-3 py-2"
+                style={{ background: theme.surfaceAlt }}
+              >
+                <Loader2
+                  size={12}
+                  className="animate-spin"
+                  style={{ color: theme.accent }}
+                />
+                <span
+                  className="text-[11px] font-medium"
+                  style={{ color: theme.textMuted }}
+                >
+                  AI thinking...
+                </span>
+              </div>
+            </div>
+          )}
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Suggestion chips */}
+        {chatMessages.length <= 2 && (
+          <div
+            className="flex gap-1.5 overflow-x-auto px-3 pb-2 shrink-0"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {QUICK_QUESTIONS.map((q) => (
+              <button
+                key={q}
+                onClick={() => handleChatSend(q)}
+                className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
+                style={{
+                  background: theme.accent + "12",
+                  color: theme.accent,
+                  border: `1px solid ${theme.accent}30`,
+                }}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Pinned input bar */}
+        <div
+          className="flex items-center gap-2 p-2 border-t shrink-0"
+          style={{ borderColor: theme.border }}
+        >
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
+            placeholder="Ask anything..."
+            className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
+            style={{ color: theme.text }}
+          />
+          <button
+            onClick={() => handleChatSend()}
+            disabled={!chatInput.trim() || chatTyping}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all cursor-pointer disabled:opacity-30"
+            style={{ background: theme.accent }}
+          >
+            <Send size={13} className="text-white" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

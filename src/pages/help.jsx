@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   HelpCircle,
   ChevronDown,
@@ -11,9 +11,6 @@ import {
   Shield,
   Calendar,
   CreditCard,
-  Send,
-  X,
-  Loader2,
 } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import Card from "../components/common/Card";
@@ -70,79 +67,22 @@ const FAQ_DATA = [
   },
 ];
 
-const QUICK_QUESTIONS = [
-  "What documents do I need for NADRA CNIC update?",
-  "How do I reset my visit appointment?",
-  "Where is Gate 2 at the Executive Center?",
-];
-
-const AI_RESPONSES = {
-  "What documents do I need for NADRA CNIC update?":
-    "For a NADRA CNIC update, you need: (1) Original CNIC, (2) 2 passport-size photos, (3) Proof of address (utility bill less than 3 months old), (4) Birth Certificate or B-Form. Bring both originals and photocopies. Fee: PKR 1,500 for normal, PKR 2,500 for executive.",
-  "How do I reset my visit appointment?":
-    "To reset your visit appointment: Go to the Visits tab → find your upcoming visit → click 'Cancel Visit' → confirm. Then start a new application from the Quick Access Hub to schedule a fresh appointment. Your tracking token will be regenerated.",
-  "Where is Gate 2 at the Executive Center?":
-    "Gate 2 at the NADRA Mega Center (Executive) in Blue Area, Islamabad is the main entrance for CNIC services. Enter through Gate 2, proceed to the Token Counter, then follow signs to Biometric Desk 4. Arrive 15 minutes before your scheduled time.",
-};
-
-const Help = () => {
+/**
+ * Help – Help & Support page.
+ *
+ * Props:
+ *   onOpenChat – callback to open the global chat widget
+ */
+const Help = ({ onOpenChat = () => {} }) => {
   const { theme } = useTheme();
   const [openId, setOpenId] = useState(null);
   const [search, setSearch] = useState("");
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([
-    {
-      id: 1,
-      role: "ai",
-      text: "Hello! I'm your QueueLess Assistant. Ask me anything about NADRA document rules, passport applications, or your upcoming office visit.",
-    },
-  ]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatTyping, setChatTyping] = useState(false);
-  const chatEndRef = useRef(null);
-
-  /* Lock body scroll when chat is open */
-  useEffect(() => {
-    if (!isChatOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [isChatOpen]);
 
   const filtered = FAQ_DATA.filter(
     (faq) =>
       faq.question.toLowerCase().includes(search.toLowerCase()) ||
       faq.answer.toLowerCase().includes(search.toLowerCase()),
   );
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages, chatTyping]);
-
-  const simulateResponse = (msg) => {
-    setChatTyping(true);
-    const response =
-      AI_RESPONSES[msg] ||
-      `That's a great question about "${msg}". For the most accurate guidance, I recommend checking the specific service requirements in the Quick Access Hub or visiting the nearest office. Our AI agents will prepare a personalized checklist for you.`;
-    setTimeout(() => {
-      setChatMessages((prev) => [
-        ...prev,
-        { id: Date.now(), role: "ai", text: response },
-      ]);
-      setChatTyping(false);
-    }, 1000 + Math.random() * 800);
-  };
-
-  const handleChatSend = (text) => {
-    const msg = text || chatInput.trim();
-    if (!msg) return;
-    setChatMessages((prev) => [
-      ...prev,
-      { id: Date.now(), role: "user", text: msg },
-    ]);
-    setChatInput("");
-    simulateResponse(msg);
-  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -175,7 +115,7 @@ const Help = () => {
         <Button
           variant="teal"
           icon={<MessageCircle size={14} />}
-          onClick={() => setIsChatOpen(true)}
+          onClick={onOpenChat}
           className="hover:opacity-90 active:scale-95"
         >
           Start Chat
@@ -183,28 +123,7 @@ const Help = () => {
       </Card>
 
       {/* Quick Contact */}
-      <div className="grid grid-cols-3 gap-3">
-        {/* Chat with AI Assistant */}
-        <Card
-          className="flex flex-col items-center gap-2 py-4 text-center cursor-pointer transition-shadow hover:shadow-md"
-          padding="p-3"
-          onClick={() => setIsChatOpen(true)}
-        >
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{ background: "#0d948815" }}
-          >
-            <Bot size={18} style={{ color: "#0d9488" }} />
-          </div>
-          <span
-            className="text-[11px] font-semibold leading-tight"
-            style={{ color: theme.text }}
-          >
-            Chat with AI Assistant
-          </span>
-        </Card>
-
-        {/* Email Support */}
+      <div className="grid grid-cols-2 gap-3">
         <a href="mailto:support@queueless.ai" className="no-underline">
           <Card
             className="flex flex-col items-center gap-2 py-4 text-center cursor-pointer transition-shadow hover:shadow-md"
@@ -225,7 +144,6 @@ const Help = () => {
           </Card>
         </a>
 
-        {/* Call Helpline */}
         <a href="tel:+9251111786100" className="no-underline">
           <Card
             className="flex flex-col items-center gap-2 py-4 text-center cursor-pointer transition-shadow hover:shadow-md"
@@ -365,142 +283,6 @@ const Help = () => {
           +92-51-111-786-100
         </a>
       </p>
-
-      {/* ═══════════════════════════════════════════════════════
-          AI CHAT MODAL
-          ═══════════════════════════════════════════════════════ */}
-      {isChatOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 pb-20 bg-black/40 backdrop-blur-sm"
-          onClick={() => setIsChatOpen(false)}
-        >
-          <div
-            className="flex w-full max-h-[80vh] flex-col justify-between overflow-hidden rounded-2xl shadow-2xl"
-            style={{
-              background: theme.surface,
-              border: `1px solid ${theme.border}`,
-              maxWidth: "440px",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Chat header */}
-            <div
-              className="flex items-center justify-between px-4 py-3"
-              style={{ background: theme.accent }}
-            >
-              <div className="flex items-center gap-2">
-                <Bot size={20} className="text-white" />
-                <div>
-                  <p className="text-sm font-bold text-white">
-                    QueueLess AI Support Assistant
-                  </p>
-                  <p className="text-[10px] text-white/70">
-                    AI-powered • Instant responses
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsChatOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-              {chatMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className="max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed"
-                    style={{
-                      background:
-                        msg.role === "user" ? theme.accent : theme.surfaceAlt,
-                      color: msg.role === "user" ? "#ffffff" : theme.text,
-                      borderBottomRightRadius:
-                        msg.role === "user" ? "6px" : "16px",
-                      borderBottomLeftRadius:
-                        msg.role === "ai" ? "6px" : "16px",
-                    }}
-                  >
-                    {msg.text}
-                  </div>
-                </div>
-              ))}
-
-              {/* Typing indicator */}
-              {chatTyping && (
-                <div className="flex justify-start">
-                  <div
-                    className="flex items-center gap-2 rounded-2xl rounded-bl-md px-4 py-3"
-                    style={{ background: theme.surfaceAlt }}
-                  >
-                    <Loader2
-                      size={14}
-                      className="animate-spin"
-                      style={{ color: theme.accent }}
-                    />
-                    <span
-                      className="text-xs font-medium"
-                      style={{ color: theme.textMuted }}
-                    >
-                      AI thinking...
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Quick reply chips */}
-            {chatMessages.length <= 2 && (
-              <div className="flex flex-wrap gap-1.5 px-4 pb-2">
-                {QUICK_QUESTIONS.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => handleChatSend(q)}
-                    className="rounded-full px-2.5 py-1 text-[10px] font-semibold transition-colors cursor-pointer"
-                    style={{
-                      background: theme.accent + "12",
-                      color: theme.accent,
-                      border: `1px solid ${theme.accent}30`,
-                    }}
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Input */}
-            <div
-              className="flex items-center gap-2 border-t px-3 py-2.5"
-              style={{ borderColor: theme.border }}
-            >
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleChatSend()}
-                placeholder="Ask about documents, visits, offices..."
-                className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-40"
-                style={{ color: theme.text }}
-              />
-              <button
-                onClick={() => handleChatSend()}
-                disabled={!chatInput.trim() || chatTyping}
-                className="flex h-8 w-8 items-center justify-center rounded-lg transition-all cursor-pointer disabled:opacity-30"
-                style={{ background: theme.accent }}
-              >
-                <Send size={14} className="text-white" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
