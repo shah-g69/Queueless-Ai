@@ -29,6 +29,7 @@ import {
   dispatchBrevoEmail,
   uploadFileToDriveVault,
   getGoogleCalendarUrl,
+  getGmailComposeUrl,
 } from "../../services/aiservices";
 
 export default function AIResultsDashboard({ plan, onFindOffice }) {
@@ -470,14 +471,30 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
         </div>
 
         {emailStatus === "sent" ? (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs font-bold text-emerald-800">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 size={16} className="text-emerald-600" />
-              <span>Email Sent! Pass ID: #{trackingId}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs font-bold text-emerald-800">
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                <span>Visit Pass Sent! Pass ID: #{trackingId}</span>
+              </div>
+              <span className="text-[11px] font-normal text-emerald-700 pl-6">
+                Sent to: <strong>{email}</strong> (Check Inbox & Spam)
+              </span>
             </div>
-            <span className="text-[11px] font-normal text-emerald-700">
-              (Check Inbox or Spam folder)
-            </span>
+
+            <a
+              href={getGmailComposeUrl({
+                email,
+                service,
+                plan: { ...plan, readiness_score: score, documents_checklist: checklist },
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold transition-all shrink-0 shadow-xs cursor-pointer"
+            >
+              <ExternalLink size={13} />
+              <span>Open in Gmail</span>
+            </a>
           </div>
         ) : (
           <form onSubmit={handleSendEmail} className="flex w-full sm:w-auto items-center gap-2">
