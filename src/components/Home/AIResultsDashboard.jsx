@@ -376,47 +376,83 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           {/* Blue Area 24/7 Mega Center */}
-          <div className="rounded-xl p-3.5 border border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/20">
+          <div className="rounded-xl p-4 border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300">Blue Area 24/7 Mega Center</span>
-              <span className="text-[10px] font-extrabold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
-                🟢 FAST
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Blue Area 24/7 Mega Center</span>
+              <span className="text-[10px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                Fast Line
               </span>
             </div>
-            <p className="text-xl font-black text-emerald-700 dark:text-emerald-400 mt-1.5">~15 Minutes</p>
-            <p className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Short Lines (Quick Visit)</p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-              Best window: Tonight after 8:30 PM for almost zero waiting.
+            <div className="mt-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                Token Waiting Time:
+              </p>
+              <p className="text-2xl font-black text-emerald-900 dark:text-emerald-100">
+                ~15 Minutes
+              </p>
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+              <span>👥 Queue:</span>
+              <span className="bg-emerald-200/80 dark:bg-emerald-900/60 px-1.5 py-0.5 rounded text-[11px]">
+                ~5 to 8 people ahead
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-800/50">
+              💡 <strong>Best Time:</strong> Visit after 8:30 PM for near-zero waiting.
             </p>
           </div>
 
           {/* G-10 Regional Center */}
-          <div className="rounded-xl p-3.5 border border-red-200 bg-red-50/60 dark:bg-red-950/20">
+          <div className="rounded-xl p-4 border border-red-300 bg-red-50 dark:bg-red-950/40 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-red-900 dark:text-red-300">G-10 Regional Center</span>
-              <span className="text-[10px] font-extrabold bg-red-200 text-red-900 px-2 py-0.5 rounded-full">
-                🔴 CROWDED
+              <span className="text-xs font-bold text-slate-900 dark:text-white">G-10 Regional Center</span>
+              <span className="text-[10px] font-black bg-red-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                Heavy Rush
               </span>
             </div>
-            <p className="text-xl font-black text-red-700 dark:text-red-400 mt-1.5">~1.5 Hours Wait</p>
-            <p className="text-[11px] font-semibold text-red-800 dark:text-red-300">Heavy Rush (Long Queues)</p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-              Large daytime backlog. Arrive at 8:00 AM sharp or choose Blue Area.
+            <div className="mt-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-red-800 dark:text-red-300">
+                Token Waiting Time:
+              </p>
+              <p className="text-2xl font-black text-red-900 dark:text-red-100">
+                ~1.5 Hours Wait
+              </p>
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-red-800 dark:text-red-300">
+              <span>👥 Queue:</span>
+              <span className="bg-red-200/80 dark:bg-red-900/60 px-1.5 py-0.5 rounded text-[11px]">
+                ~70+ people ahead
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-2 pt-2 border-t border-red-200 dark:border-red-800/50">
+              ⚠️ <strong>Avoid Daytime:</strong> Heavy morning backlog. Reach at 8:00 AM.
             </p>
           </div>
 
           {/* G-10/4 Passport Office */}
-          <div className="rounded-xl p-3.5 border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20">
+          <div className="rounded-xl p-4 border border-amber-300 bg-amber-50 dark:bg-amber-950/40 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-900 dark:text-amber-300">G-10/4 Passport Office</span>
-              <span className="text-[10px] font-extrabold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
-                🟡 MODERATE
+              <span className="text-xs font-bold text-slate-900 dark:text-white">G-10/4 Passport Office</span>
+              <span className="text-[10px] font-black bg-amber-600 text-white px-2 py-0.5 rounded-md uppercase tracking-wider">
+                Moderate
               </span>
             </div>
-            <p className="text-xl font-black text-amber-700 dark:text-amber-400 mt-1.5">~45 Minutes</p>
-            <p className="text-[11px] font-semibold text-amber-800 dark:text-amber-300">Medium Lines (Normal)</p>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
-              Tip: Pay fee via Passport app or 1Bill before taking a token.
+            <div className="mt-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">
+                Token Waiting Time:
+              </p>
+              <p className="text-2xl font-black text-amber-900 dark:text-amber-100">
+                ~45 Minutes
+              </p>
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
+              <span>👥 Queue:</span>
+              <span className="bg-amber-200/80 dark:bg-amber-900/60 px-1.5 py-0.5 rounded text-[11px]">
+                ~25 to 30 people ahead
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-2 pt-2 border-t border-amber-200 dark:border-amber-800/50">
+              💡 <strong>Pro-Tip:</strong> Pay fee on mobile app before taking token.
             </p>
           </div>
         </div>
