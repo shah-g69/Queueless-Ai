@@ -143,20 +143,20 @@ export function getGoogleCalendarUrl({ service, plan }) {
 
   const checklistText = (plan?.documents_checklist || [])
     .map((d) => `• ${d.item} (${d.status})`)
-    .join("%0A");
+    .join("\n");
 
   const stepsText = (plan?.step_by_step_plan || [])
     .slice(0, 3)
     .map((s, i) => `${i + 1}. ${s}`)
-    .join("%0A");
+    .join("\n");
 
   const details = encodeURIComponent(
-    `QueueLess AI Visit Pass%0A` +
-    `Readiness Score: ${plan?.readiness_score || "75%"}%0A%0A` +
-    `MANDATORY DOCUMENTS CHECKLIST:%0A${checklistText}%0A%0A` +
-    `FIRST COUNTER STEPS:%0A${stepsText}%0A%0A` +
-    `Estimated Fee: ${plan?.estimated_fee || "Standard"}%0A` +
-    `Pro-Tip: ${plan?.pro_tip || "Arrive during low rush"}`
+    `QueueLess AI Visit Pass\n` +
+    `Readiness Score: ${plan?.readiness_score || "75%"}\n\n` +
+    `📋 MANDATORY DOCUMENTS CHECKLIST:\n${checklistText}\n\n` +
+    `🗺️ FIRST COUNTER STEPS:\n${stepsText}\n\n` +
+    `💵 Estimated Fee: ${plan?.estimated_fee || "Standard"}\n` +
+    `💡 Pro-Tip: ${plan?.pro_tip || "Arrive during low rush"}`
   );
 
   const location = encodeURIComponent("NADRA 24/7 Mega Center, Blue Area, Islamabad (Gate 2)");
