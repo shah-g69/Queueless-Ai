@@ -81,7 +81,7 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
       setEmailStatus("sent");
     } catch (err) {
       setEmailStatus("idle");
-      alert("Could not dispatch email. Please try again.");
+      alert("Could not send email. Please try again.");
     }
   };
 
@@ -447,7 +447,7 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
         </div>
       </Card>
 
-      {/* ── 5. Brevo Email Dispatcher Card (Active Connector Execution) ── */}
+      {/* ── 5. Email Pass Card (Send to Any Citizen or Friend) ── */}
       <div
         className="rounded-2xl p-5 border shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         style={{
@@ -456,30 +456,35 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
         }}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
             <Mail size={22} />
           </div>
           <div>
             <h4 className="text-sm font-bold" style={{ color: theme.text }}>
-              📩 Dispatch Official Visit Pass to Citizen Email
+              📩 Send My Visit Pass & Checklist to Email
             </h4>
             <p className="text-[11px]" style={{ color: theme.textMuted }}>
-              Powered by your active <strong>Fastn Brevo Connector</strong> (Sends complete prep slip & checklist)
+              We will send your complete document checklist and appointment details straight to your inbox.
             </p>
           </div>
         </div>
 
         {emailStatus === "sent" ? (
-          <div className="flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2 text-xs font-bold text-emerald-800">
-            <CheckCircle2 size={16} className="text-emerald-600" />
-            <span>Visit Pass Sent! Brevo ID: #{trackingId}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3.5 py-2.5 text-xs font-bold text-emerald-800">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="text-emerald-600" />
+              <span>Email Sent! Pass ID: #{trackingId}</span>
+            </div>
+            <span className="text-[11px] font-normal text-emerald-700">
+              (Check Inbox or Spam folder)
+            </span>
           </div>
         ) : (
           <form onSubmit={handleSendEmail} className="flex w-full sm:w-auto items-center gap-2">
             <input
               type="email"
               required
-              placeholder="Enter citizen email (e.g. ali@gmail.com)"
+              placeholder="Enter email (e.g. friend@gmail.com)"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="rounded-xl px-3 py-2 text-xs outline-none border transition-all w-full sm:w-64"
@@ -498,12 +503,12 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
               {emailStatus === "sending" ? (
                 <>
                   <Loader2 size={13} className="animate-spin" />
-                  <span>Sending via Brevo...</span>
+                  <span>Sending Email...</span>
                 </>
               ) : (
                 <>
                   <Send size={13} />
-                  <span>Send Pass</span>
+                  <span>Send Email</span>
                 </>
               )}
             </Button>

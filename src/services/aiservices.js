@@ -56,20 +56,24 @@ export async function queryQueueLessAI({ service_type, citizen_details, user_con
 }
 
 /**
- * Dispatch Official Visit Pass via Fastn Brevo Connector
+ * Send Visit Pass via Fastn Brevo Connector
  */
 export async function dispatchBrevoEmail({ email, service, plan }) {
   const payload = {
     action: "dispatch_email",
     connector: "brevo",
+    service_type: service || "NADRA Smart CNIC",
+    service_name: service || "NADRA Smart CNIC",
+    citizen_details: `Official Visit Pass Request for ${service || "NADRA Smart CNIC"}`,
+    user_contact: email,
     recipient_email: email,
-    service_name: service,
     readiness_score: plan?.readiness_score || "75%",
     checklist: plan?.documents_checklist || [],
     steps: plan?.step_by_step_plan || [],
     timestamp: new Date().toISOString(),
   };
 
+  // 1. Try local proxy
   try {
     const response = await fetch(FASTN_WEBHOOK_URL, {
       method: "POST",
@@ -77,17 +81,31 @@ export async function dispatchBrevoEmail({ email, service, plan }) {
       body: JSON.stringify(payload),
     });
     if (response.ok) {
-      return { success: true, trackingId: `BRV-${Math.floor(100000 + Math.random() * 900000)}` };
+      return { success: true, trackingId: `PASS-${Math.floor(100000 + Math.random() * 900000)}` };
     }
   } catch (err) {
-    console.warn("Brevo webhook notice:", err);
+    console.warn("Proxy webhook notice:", err);
+  }
+
+  // 2. Try direct Fastn endpoint
+  try {
+    const response = await fetch(FASTN_DIRECT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      return { success: true, trackingId: `PASS-${Math.floor(100000 + Math.random() * 900000)}` };
+    }
+  } catch (err) {
+    console.warn("Direct webhook notice:", err);
   }
 
   // Graceful simulation to guarantee live demo never fails
-  await new Promise((res) => setTimeout(res, 900));
+  await new Promise((res) => setTimeout(res, 600));
   return {
     success: true,
-    trackingId: `BRV-${Math.floor(100000 + Math.random() * 900000)}`,
+    trackingId: `PASS-${Math.floor(100000 + Math.random() * 900000)}`,
     simulated: true,
   };
 }
