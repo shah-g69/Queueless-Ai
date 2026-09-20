@@ -32,7 +32,7 @@ import {
   getGmailComposeUrl,
 } from "../../services/aiservices";
 
-export default function AIResultsDashboard({ plan, onFindOffice }) {
+export default function AIResultsDashboard({ plan, onFindOffice, onUpdateReadiness }) {
   const { theme } = useTheme();
 
   if (!plan) return null;
@@ -49,22 +49,66 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
 
   // Local interactive state for live connector actions
   const [checklist, setChecklist] = useState(documents_checklist);
+  const [vaultDocs, setVaultDocs] = useState({});
   const [score, setScore] = useState(readiness_score);
   const [email, setEmail] = useState("");
   const [emailStatus, setEmailStatus] = useState("idle"); // 'idle' | 'sending' | 'sent'
   const [trackingId, setTrackingId] = useState("");
-  const [vaultDocs, setVaultDocs] = useState({});
   const [uploadingIdx, setUploadingIdx] = useState(null);
+
+  const getIsMissing = (doc, idx, vDocs = vaultDocs) => {
+    if (vDocs[idx]) return false;
+    const s = (doc?.status || "").toLowerCase();
+    return s.includes("missing") || s.includes("need") || s.includes("alone") || s.includes("pending");
+  };
+
+  const computeScore = (currentChecklist, currentVaultDocs) => {
+    const total = currentChecklist.length || 1;
+    const missing = currentChecklist.filter((doc, i) => getIsMissing(doc, i, currentVaultDocs)).length;
+    if (missing === 0) return 100;
+    const ready = total - missing;
+    const ratio = Math.round((ready / total) * 100);
+    // Never allow >= 85% if even 1 document is missing!
+    return Math.min(80, Math.max(30, ratio));
+  };
 
   useEffect(() => {
     setChecklist(documents_checklist);
-    setScore(readiness_score);
     setVaultDocs({});
     setEmailStatus("idle");
+
+    const total = documents_checklist.length || 1;
+    const initialMissing = documents_checklist.filter((doc, i) => getIsMissing(doc, i, {})).length;
+    let initialScore = 100;
+    if (initialMissing > 0) {
+      const ready = total - initialMissing;
+      const ratio = Math.round((ready / total) * 100);
+      initialScore = Math.min(80, Math.max(30, ratio));
+      const planScoreNum = parseInt(readiness_score);
+      if (!isNaN(planScoreNum)) {
+        initialScore = Math.min(initialScore, planScoreNum);
+      }
+    }
+
+    setScore(`${initialScore}%`);
+
+    if (onUpdateReadiness) {
+      onUpdateReadiness({
+        score: initialScore,
+        missingDocsCount: initialMissing,
+        updatedDocs: documents_checklist.map((d, i) => ({
+          id: i + 1,
+          label: d.item,
+          status: getIsMissing(d, i, {}) ? "missing" : "verified",
+        })),
+      });
+    }
   }, [plan]);
 
-  const scoreNum = parseInt(score) || 75;
-  const isHighRisk = scoreNum < 60;
+  const missingCount = checklist.filter((doc, idx) => getIsMissing(doc, idx)).length;
+  const isHighRisk = missingCount >= 2;
+  const isModerateRisk = missingCount === 1;
+  const isFullyReady = missingCount === 0;
 
   // 1. Brevo Email Dispatch Handler
   const handleSendEmail = async (e) => {
@@ -98,23 +142,34 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
         serviceName: service,
       });
 
-      // Update vault state & flip status to Ready
-      setVaultDocs((prev) => ({
-        ...prev,
+      const updatedVault = {
+        ...vaultDocs,
         [idx]: { name: file.name, fileId: res.fileId },
-      }));
+      };
+      setVaultDocs(updatedVault);
 
-      setChecklist((prev) =>
-        prev.map((doc, i) =>
-          i === idx ? { ...doc, status: "Present (In Drive Vault)", required: true } : doc
-        )
+      const updatedChecklist = checklist.map((doc, i) =>
+        i === idx ? { ...doc, status: "Present (In Drive Vault)", required: true } : doc
       );
+      setChecklist(updatedChecklist);
 
-      // Boost readiness score!
-      setScore((prev) => {
-        const cur = parseInt(prev) || 35;
-        return `${Math.min(100, cur + 35)}%`;
-      });
+      const newScoreNum = computeScore(updatedChecklist, updatedVault);
+      setScore(`${newScoreNum}%`);
+
+      const remainingMissing = updatedChecklist.filter((doc, i) => getIsMissing(doc, i, updatedVault)).length;
+
+      // Update top header in App.jsx in real time!
+      if (onUpdateReadiness) {
+        onUpdateReadiness({
+          score: newScoreNum,
+          missingDocsCount: remainingMissing,
+          updatedDocs: updatedChecklist.map((d, i) => ({
+            id: i + 1,
+            label: d.item,
+            status: updatedVault[i] || !getIsMissing(d, i, updatedVault) ? "verified" : "missing",
+          })),
+        });
+      }
     } catch (err) {
       console.warn("Upload error:", err);
     } finally {
@@ -131,15 +186,15 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
       <div
         className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl p-5 border shadow-sm transition-all"
         style={{
-          background: isHighRisk ? "#fef2f2" : "#f0fdf4",
-          borderColor: isHighRisk ? "#fecaca" : "#bbf7d0",
+          background: isFullyReady ? "#f0fdf4" : isModerateRisk ? "#fffbeb" : "#fef2f2",
+          borderColor: isFullyReady ? "#bbf7d0" : isModerateRisk ? "#fde68a" : "#fecaca",
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="flex flex-col h-14 w-14 shrink-0 items-center justify-center rounded-xl font-black transition-all shadow-xs"
             style={{
-              background: isHighRisk ? "#ef4444" : "#16a34a",
+              background: isFullyReady ? "#16a34a" : isModerateRisk ? "#d97706" : "#ef4444",
               color: "#ffffff",
             }}
           >
@@ -147,13 +202,21 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
             <span className="text-[9px] font-bold uppercase tracking-wider opacity-90 mt-0.5">Ready</span>
           </div>
           <div>
-            <h3 className="text-base font-bold" style={{ color: isHighRisk ? "#991b1b" : "#166534" }}>
-              {service} — Your Visit Checklist & Guide
+            <h3
+              className="text-base font-bold"
+              style={{ color: isFullyReady ? "#166534" : isModerateRisk ? "#92400e" : "#991b1b" }}
+            >
+              {service} — {isFullyReady ? "All Documents Ready" : `${missingCount} Document${missingCount > 1 ? "s" : ""} Missing`}
             </h3>
-            <p className="text-xs font-semibold mt-0.5" style={{ color: isHighRisk ? "#b91c1c" : "#15803d" }}>
-              {isHighRisk
-                ? "⚠️ DO NOT GO YET: You are missing required documents and will be turned away at the counter."
-                : "✅ YOU ARE READY TO GO: You have all required documents to visit the office."}
+            <p
+              className="text-xs font-semibold mt-0.5"
+              style={{ color: isFullyReady ? "#15803d" : isModerateRisk ? "#b45309" : "#b91c1c" }}
+            >
+              {isFullyReady
+                ? "✅ YOU ARE READY TO GO: All required documents are verified and saved."
+                : isModerateRisk
+                ? "⚠️ ALMOST READY: 1 required document is still missing before you can visit the counter."
+                : `⚠️ DO NOT GO YET: You are missing ${missingCount} required documents and will be turned away at the counter.`}
             </p>
           </div>
         </div>
@@ -177,7 +240,7 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
       </div>
 
       {/* ── 2. Critical Roadblock Alert (Red/Amber Box) ── */}
-      {missing_critical_info && missing_critical_info.length > 0 && isHighRisk && (
+      {missing_critical_info && missing_critical_info.length > 0 && missingCount > 0 && (
         <div
           className="rounded-2xl p-5 border shadow-sm"
           style={{
@@ -188,7 +251,7 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
           <div className="flex items-center gap-2 mb-2">
             <ShieldAlert size={20} className="text-amber-600" />
             <h4 className="text-sm font-bold text-amber-900">
-              Critical Roadblocks — What Is Missing:
+              Critical Roadblocks — What Is Missing ({missingCount} required item{missingCount > 1 ? "s" : ""}):
             </h4>
           </div>
           <ul className="flex flex-col gap-2 pl-2">

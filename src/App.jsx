@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import WelcomeHeader from "./components/Home/WelcomeHeader";
 import ActiveApplicationBanner from "./components/Home/ActiveApplicationBanner";
@@ -134,14 +134,18 @@ function AppInner() {
         });
       }
 
-      setAllTasksComplete(score >= 80);
+      const hasMissing = Array.isArray(plan.documents_checklist) && plan.documents_checklist.some(
+        (doc) => (doc.status || "").toLowerCase().includes("missing") || (doc.status || "").toLowerCase().includes("need") || (doc.status || "").toLowerCase().includes("alone")
+      );
+
+      setAllTasksComplete(!hasMissing && score === 100);
       setNewAppModal(false);
       setToast({
         message: `Fastn Agents executed! Readiness: ${plan.readiness_score}`,
         type: "success",
       });
 
-      if (score >= 70) {
+      if (!hasMissing && score === 100) {
         setShowConfetti(true);
       }
     } catch (err) {
@@ -153,6 +157,24 @@ function AppInner() {
       setNewAppModal(false);
     } finally {
       setIsAnalyzing(false);
+    }
+  }, []);
+
+  /* ── Dynamic Readiness Update (Synced live with Drive Vault uploads) ── */
+  const handleUpdateReadiness = useCallback(({ score, missingDocsCount, updatedDocs }) => {
+    if (typeof score === "number") {
+      setReadiness(score);
+    }
+    if (typeof missingDocsCount === "number") {
+      setMissingDocs(missingDocsCount);
+      const isComplete = missingDocsCount === 0 && score === 100;
+      setAllTasksComplete(isComplete);
+      if (isComplete) {
+        setShowConfetti(true);
+      }
+    }
+    if (Array.isArray(updatedDocs)) {
+      setDocuments(updatedDocs);
     }
   }, []);
 
@@ -276,6 +298,7 @@ function AppInner() {
                 <AIResultsDashboard
                   plan={aiPlan}
                   onFindOffice={() => setOfficeModal(true)}
+                  onUpdateReadiness={handleUpdateReadiness}
                 />
               )}
 
