@@ -8,6 +8,8 @@ import {
   Banknote,
   Lightbulb,
   Bell,
+  BellRing,
+  X,
   ShieldAlert,
   ArrowRight,
   Sparkles,
@@ -55,6 +57,26 @@ export default function AIResultsDashboard({ plan, onFindOffice, onUpdateReadine
   const [emailStatus, setEmailStatus] = useState("idle"); // 'idle' | 'sending' | 'sent'
   const [trackingId, setTrackingId] = useState("");
   const [uploadingIdx, setUploadingIdx] = useState(null);
+  const [showReminder, setShowReminder] = useState(false);
+
+  const triggerReminderNotification = () => {
+    setShowReminder(true);
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("🔔 QueueLess AI: 30 Minutes Remaining!", {
+          body: `Time to head to ${service} Mega Center! All required documents are ready.`,
+        });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((perm) => {
+          if (perm === "granted") {
+            new Notification("🔔 QueueLess AI: 30 Minutes Remaining!", {
+              body: `Time to head to ${service} Mega Center! All required documents are ready.`,
+            });
+          }
+        });
+      }
+    }
+  };
 
   const getIsMissing = (doc, idx, vDocs = vaultDocs) => {
     if (vDocs[idx]) return false;
@@ -221,8 +243,23 @@ export default function AIResultsDashboard({ plan, onFindOffice, onUpdateReadine
           </div>
         </div>
 
-        {/* Quick Action */}
-        <div className="flex items-center gap-2">
+        {/* Quick Actions */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Test 30-Min Notification Preview */}
+          <button
+            onClick={triggerReminderNotification}
+            className="flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold transition-all hover:opacity-90 shadow-xs cursor-pointer border"
+            style={{
+              background: theme.surface,
+              borderColor: theme.border,
+              color: theme.text,
+            }}
+            title="Preview the 30-minute departure alert"
+          >
+            <Bell size={13} className="text-amber-500 animate-bounce" />
+            <span>Preview 30-Min Alert</span>
+          </button>
+
           {/* Google Calendar Intent */}
           <a
             href={calendarUrl}
@@ -238,6 +275,37 @@ export default function AIResultsDashboard({ plan, onFindOffice, onUpdateReadine
           </a>
         </div>
       </div>
+
+      {/* ── 30-Minute Live Departure Reminder Alert ── */}
+      {showReminder && (
+        <div className="rounded-2xl p-4 border shadow-md flex items-start justify-between gap-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 border-amber-300">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-black shadow-xs">
+              <BellRing size={20} className="animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-black uppercase tracking-wider bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 px-2 py-0.5 rounded-md">
+                  🔔 30 Minutes Remaining
+                </span>
+                <span className="text-xs font-semibold text-slate-500">Live Departure Alert</span>
+              </div>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                Time to depart for {service} Center!
+              </h4>
+              <p className="text-xs text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed">
+                Your appointment starts in 30 minutes (recommended arrival: <strong>8:25 PM</strong>). Please double check you have your original CNIC and Drive Vault files ready before departing.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowReminder(false)}
+            className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ── 2. Critical Roadblock Alert (Red/Amber Box) ── */}
       {missing_critical_info && missing_critical_info.length > 0 && missingCount > 0 && (
