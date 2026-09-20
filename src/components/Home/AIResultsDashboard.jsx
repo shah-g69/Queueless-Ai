@@ -136,53 +136,42 @@ export default function AIResultsDashboard({ plan, onFindOffice }) {
       >
         <div className="flex items-center gap-3">
           <div
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl font-black text-lg transition-all"
+            className="flex flex-col h-14 w-14 shrink-0 items-center justify-center rounded-xl font-black transition-all shadow-xs"
             style={{
               background: isHighRisk ? "#ef4444" : "#16a34a",
               color: "#ffffff",
             }}
           >
-            {score}
+            <span className="text-base font-black leading-none">{score}</span>
+            <span className="text-[9px] font-bold uppercase tracking-wider opacity-90 mt-0.5">Ready</span>
           </div>
           <div>
             <h3 className="text-base font-bold" style={{ color: isHighRisk ? "#991b1b" : "#166534" }}>
-              {service} — Preparation Blueprint
+              {service} — Your Visit Checklist & Guide
             </h3>
-            <p className="text-xs" style={{ color: isHighRisk ? "#b91c1c" : "#15803d" }}>
+            <p className="text-xs font-semibold mt-0.5" style={{ color: isHighRisk ? "#b91c1c" : "#15803d" }}>
               {isHighRisk
-                ? "⚠️ High Risk of Counter Rejection: Missing critical requirements"
-                : "✅ Counter Ready: Follow the step-by-step roadmap below"}
+                ? "⚠️ DO NOT GO YET: You are missing required documents and will be turned away at the counter."
+                : "✅ YOU ARE READY TO GO: You have all required documents to visit the office."}
             </p>
           </div>
         </div>
 
-        {/* Quick Action Connectors */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Quick Action */}
+        <div className="flex items-center gap-2">
           {/* Google Calendar Intent */}
           <a
             href={calendarUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold text-white shadow-xs transition-all hover:opacity-90 cursor-pointer"
+            className="flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:opacity-90 cursor-pointer"
             style={{ background: "#2563eb" }}
-            title="Add this visit & checklist to your Google Calendar"
+            title="Save this visit and checklist to your Google Calendar"
           >
             <Calendar size={13} />
-            <span>📅 Add to Calendar</span>
-            <ExternalLink size={10} className="opacity-70" />
+            <span>Add Visit to Calendar</span>
+            <ExternalLink size={11} className="opacity-70" />
           </a>
-
-          {/* Active Brevo Tag */}
-          <span
-            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold"
-            style={{
-              background: "#6366f118",
-              color: "#4f46e5",
-            }}
-          >
-            <Bell size={13} />
-            Brevo Connector Active
-          </span>
         </div>
       </div>
 
